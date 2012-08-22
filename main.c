@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 	char			c[BUFSIZ];
 	size_t			pass;
 	size_t			ntest;
-	int			seconds = 4;
+	int				seconds = 4;
 
 	if (argc > 1 
 		&& sscanf(argv[1], "%d", &seconds) == 1

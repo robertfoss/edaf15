@@ -13,7 +13,7 @@ static void done(int unused)
 	unused = unused;
 }
 	
-unsigned long long name_fm(char* aname, char* cname, int seconds)
+unsigned long long dt08rf1(char* aname, char* cname, int seconds)
 {
 	FILE*		afile = fopen(aname, "r");
 	FILE*		cfile = fopen(cname, "r");
