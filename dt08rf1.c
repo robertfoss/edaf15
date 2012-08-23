@@ -36,7 +36,7 @@ count_rows_cols(FILE *fp, unsigned int *rows, unsigned int *cols)
 		ch = fgetc(fp);
 		if(ch == '\n')
 			cols++;
-		if(ch == '\t' || ch = ' ')
+		if(ch == '\t' || ch == ' ')
 			rows++;
 	}
 	if(rows != 0)
@@ -47,25 +47,29 @@ count_rows_cols(FILE *fp, unsigned int *rows, unsigned int *cols)
 	return;
 }
 
-static void fm_row*
+static fm_row*
 parse_files(FILE *afile, FILE *cfile)
-{
-	unsigned int rows;
-	unsigned int cols;
+{   
+    if(cfile == NULL){
+        printf("cfile is null\n");
+    }
+	unsigned int rows = 0;
+	unsigned int cols = 0;
 	count_rows_cols(afile, &rows, &cols);
 
-	fm_row *rows = (fm_row*) malloc(sizeof(fm_row)*rows);
+	fm_row *fmrows = (fm_row*) malloc(sizeof(fm_row)*rows);
 	fm_row_entry *lesser_rows = (fm_row_entry*) malloc(sizeof(fm_row_entry)*rows*cols);
 	fm_row_entry *greater_rows = (fm_row_entry*) malloc(sizeof(fm_row_entry)*cols);
-	if(rows == NULL || lesser_rows == NULL || greater_rows == NULL) {
+	if(rows == 0 || lesser_rows == NULL || greater_rows == NULL) {
 		fprintf(stderr, "Unable to allocate memory!\n");
 		exit(1);
 	}
 
 	for(unsigned int i = 0; i < rows; ++i) {
-		rows[i]->lesser = lesser_rows[i*cols];
-		rows[i]->greater = greater_rows[i];
+		*fmrows[i].lesser = lesser_rows[i*cols];
+		*fmrows[i].greater = greater_rows[i];
 	}
+    return fmrows;
 }
 
 

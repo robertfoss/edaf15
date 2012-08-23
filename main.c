@@ -31,8 +31,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-unsigned long long name_fm(char* aname, char* cname, int seconds);
+unsigned long long dt08rf1(char* aname, char* cname, int seconds);
 
 #define ENTRY(id)	{ .name = #id, .func = id, }
 #define NAME_WIDTH	(20)
@@ -45,7 +44,7 @@ static struct fm {
 	unsigned long long	(*func)(char*, char*, int);
 	unsigned long long	count;
 } fm[] = { 
-	ENTRY(name_fm),
+	ENTRY(dt08rf1),
 };
 
 static unsigned int correct[] = { 1, 0, 1, 0, 0, 0 };
