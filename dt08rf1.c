@@ -10,12 +10,17 @@ static volatile bool		proceed = false;
 typedef struct {
 	long long numerator;
 	long long denominator;
-	unsigned long long index; // x_{index} + x_{index} <= x_{index}
-} fm_row_entry;
+	unsigned long long index; // 14*x_{index} + -2x_{index} <= 68. 0 designates no x variable
+} fm_poly_entry;
 
 typedef struct {
-	fm_row_entry *lesser;
-	fm_row_entry *greater;
+	unsigned int poly_len;
+	fm_poly_entry *poly;
+} fm_poly;
+
+typedef struct {
+	fm_poly *lesser;
+	fm_poly *greater;
 } fm_row;
 
 static void
@@ -70,17 +75,26 @@ parse_files(FILE *afile, FILE *cfile)
 	unsigned int rows = count_rows(afile);
 	unsigned int cols = count_cols(afile);
 
-	fm_row *fm_rows = (fm_row*) malloc(sizeof(fm_row)*rows);
-	fm_row_entry *fm_lesser_rows = (fm_row_entry*) malloc(sizeof(fm_row_entry)*rows*cols);
-	fm_row_entry *fm_greater_rows = (fm_row_entry*) malloc(sizeof(fm_row_entry)*cols);
-	if(fm_rows == NULL || fm_lesser_rows == NULL || fm_greater_rows == NULL) {
+	fm_row *fm_rows = (fm_row *) malloc(sizeof(fm_row)*rows);
+	fm_poly *fm_polys = (fm_poly *) malloc(sizeof(fm_poly)*rows*2);
+	fm_poly_entry *fm_lesser_rows  = (fm_poly_entry *) malloc(sizeof(fm_poly_entry)*rows*cols);
+	fm_poly_entry *fm_greater_rows = (fm_poly_entry *) malloc(sizeof(fm_poly_entry)*rows);
+
+	if(fm_rows == NULL || fm_polys == NULL || fm_lesser_rows == NULL ||
+	   fm_greater_rows == NULL) {
 		fprintf(stderr, "Unable to allocate memory!\n");
 		exit(1);
 	}
 
 	for(unsigned int i = 0; i < rows; ++i) {
-		fm_rows[i].lesser = &(fm_lesser_rows[i*cols]);
-		fm_rows[i].greater = &(fm_greater_rows[i]);
+		fm_rows[i].lesser = &(fm_polys[i]);
+		fm_rows[i].greater = &(fm_polys[rows+i]);
+
+		fm_rows[i].lesser->poly = &(fm_lesser_rows[i*cols]);
+		fm_rows[i].lesser->poly_len = cols;
+
+		fm_rows[i].greater->poly = &(fm_greater_rows[i]);
+		fm_rows[i].greater->poly_len = 1;
 	}
 
 	return fm_rows;
