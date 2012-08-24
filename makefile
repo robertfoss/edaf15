@@ -2,7 +2,7 @@
 #CFLAGS	= -m64 -O3 -g -Wall -Wextra -Werror -std=c99 -mcpu=970 -mtune=970 -maltivec
 
 # the following works on any machine
-CFLAGS	= -O3 -g -Wall -Wextra -Werror -std=c99 -ftree-vectorize -Wno-unused-parameter
+CFLAGS	= -O3 -g -Wall -Wextra -Werror -std=c99 -ftree-vectorize -Wno-unused-parameter -Wno-unused-result
 
 
 CC	= gcc 
