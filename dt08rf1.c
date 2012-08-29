@@ -34,7 +34,6 @@ long fsize(FILE *fp) {
 
 	if(fp != NULL) {
 		if( fseek(fp, 0, SEEK_END) ) {
-			fclose(fp);
 			return -1;
 		}
 
@@ -86,7 +85,7 @@ count_cols(FILE *fp)
 static fm_row *
 parse_files(FILE *afile, FILE *cfile)
 {
-	unsigned int i,j;
+	unsigned int i;
 	unsigned int rows = count_rows(afile);
 	unsigned int cols = count_cols(afile);
 
@@ -111,29 +110,51 @@ parse_files(FILE *afile, FILE *cfile)
 		fm_rows[i].greater->poly_len = 1;
 	}
 
-	long file_length = fsize(afile);
+	long file_length = fsize(afile)+1;
 	char *buffer = (char *) malloc(sizeof(char)*file_length);
 	fread(buffer, sizeof(char), file_length, afile);
+	rewind(afile);
+	buffer[file_length-1] = '\0';
 
 	long long read_integer;
-	char read_char;
+	char *line_tok, *integer_tok, *line_save, *integer_save;
+	unsigned int ctr_col = 0;
+	unsigned int ctr_row = 0;
 
-	char *tok = strtok(buffer, "\n");
-	tok = strtok(NULL, "\n");
-	for(i = 0; i < rows; ++i) {
-		for(j = 0; j < cols; ++j) {
-			int ret_val = sscanf(tok, "%lld%c", &read_integer, &read_char);
-			if(ret_val != 2) {
-				read_integer = 0;
-			}
-			printf("(%u,%u) %lld\n",i,j,read_integer);
-				
-			fm_rows[i].lesser->poly[j].numerator = read_integer;
-			fm_rows[i].lesser->poly[j].denominator = 1;
-			fm_rows[i].lesser->poly[j].index = j+1;
+	for (line_tok = strtok_r(buffer+4*sizeof(char), "\n", &line_save); line_tok; line_tok = strtok_r(NULL, "\n", &line_save)) {
+		//printf("line=%s\n", line_tok);
+		for (integer_tok = strtok_r(line_tok, " \t", &integer_save); integer_tok; integer_tok = strtok_r(NULL, " \t", &integer_save)) {
+				//printf("integer=%s\n", integer_tok);
+				sscanf(integer_tok, "%lld", &read_integer);
+
+				fm_rows[ctr_row].lesser->poly[ctr_col].numerator = read_integer;
+				fm_rows[ctr_row].lesser->poly[ctr_col].denominator = 1;
+				fm_rows[ctr_row].lesser->poly[ctr_col].index = ctr_col + 1;
+				++ctr_col;
 		}
-		tok = strtok(NULL, "\n");
+		ctr_col = 0;
+		++ctr_row;
 	}
+
+	file_length = fsize(cfile)+1;
+	buffer = (char *) malloc(sizeof(char)*file_length);
+	fread(buffer, sizeof(char), file_length, cfile);
+	rewind(cfile);
+	buffer[file_length-1] = '\0';
+
+	ctr_row = 0;
+
+	for (line_tok = strtok_r(buffer+2*sizeof(char), " \t\n", &line_save); line_tok; line_tok = strtok_r(NULL, "\n", &line_save)) {
+		printf("line=%s\n", line_tok);
+		sscanf(line_tok, "%lld", &read_integer);
+
+		fm_rows[ctr_row].greater->poly[0].numerator = read_integer;
+		fm_rows[ctr_row].greater->poly[0].denominator = 1;
+		fm_rows[ctr_row].greater->poly[0].index = ctr_col + 1;
+		++ctr_row;
+	}
+
+	free(buffer);
 	return fm_rows;
 }
 
