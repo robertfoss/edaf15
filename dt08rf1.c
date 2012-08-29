@@ -100,9 +100,7 @@ parse_files(FILE *afile, FILE *cfile)
 		fm_rows[i].lesser = &(fm_polys[i]);
 		fm_rows[i].greater = &(fm_polys[rows+i]);
 
-        for(j = i; j < cols*i; ++j){
-		    fm_rows[i].lesser->poly = &(fm_lesser_rows[j]);
-        }
+	    fm_rows[i].lesser->poly = &(fm_lesser_rows[i*cols]);
 		fm_rows[i].lesser->poly_len = cols;
 
 		fm_rows[i].greater->poly = &(fm_greater_rows[i]);
