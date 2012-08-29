@@ -24,6 +24,9 @@ typedef struct {
 	fm_poly *greater;
 } fm_row;
 
+typedef struct{
+    fm_row* rows;
+} fm_system;
 
 long fsize(FILE *fp) {
 	long size;
@@ -99,7 +102,7 @@ parse_files(FILE *afile, FILE *cfile)
 		fm_rows[i].lesser = &(fm_polys[i]);
 		fm_rows[i].greater = &(fm_polys[rows+i]);
 
-		fm_rows[i].lesser->poly = &(fm_lesser_rows[i*cols]);
+	    fm_rows[i].lesser->poly = &(fm_lesser_rows[i*cols]);
 		fm_rows[i].lesser->poly_len = cols;
 
 		fm_rows[i].greater->poly = &(fm_greater_rows[i]);
@@ -156,13 +159,13 @@ parse_files(FILE *afile, FILE *cfile)
 
 
 static void
-print_fm_rows(fm_row* rows, unsigned int nbr_rows)
+print_system(fm_system* system, unsigned int nbr_rows)
 {
 	unsigned int i,j;
 	printf("print_fm_rows(): rows=%p  nbr_rows=%u\n", rows, nbr_rows);
 	for(i = 0; i < nbr_rows; ++i) {
-		fm_poly *poly_lesser  = rows[i].lesser;
-		fm_poly *poly_greater = rows[i].greater;
+		fm_poly *poly_lesser  = system->rows[i].lesser;
+		fm_poly *poly_greater = system->rows[i].greater;
 		fm_poly_entry *poly_entry;
 
 		for(j = 0; j < poly_lesser->poly_len; ++j) {
@@ -218,9 +221,9 @@ dt08rf1(char* aname, char* cname, int seconds)
 		fprintf(stderr, "could not open file c\n");
 		exit(1);
 	}
-
-	fm_row *fm_rows = parse_files(afile, cfile);
-	print_fm_rows(fm_rows, count_rows(afile));
+    fm_system* system = (fm_system*)malloc(sizeof(fm_system));
+    system->rows = parse_files(afile, cfile);
+	print_system(system, count_rows(afile));
 
 	if (seconds == 0) {
 		/* Just run once for validation. */
