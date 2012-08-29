@@ -25,6 +25,7 @@ typedef struct {
 } fm_row;
 
 typedef struct{
+    unsigned int nbr_rows;
     fm_row* rows;
 } fm_system;
 
@@ -138,11 +139,11 @@ parse_files(FILE *afile, FILE *cfile)
 
 
 static void
-print_system(fm_system* system, unsigned int nbr_rows)
+print_system(fm_system* system)
 {
 	unsigned int i,j;
 
-	for(i = 0; i < nbr_rows; ++i) {
+	for(i = 0; i < system->nbr_rows; ++i) {
 		fm_poly *poly_lesser  = system->rows[i].lesser;
 		fm_poly *poly_greater = system->rows[i].greater;
 		fm_poly_entry *poly_entry;
@@ -182,6 +183,9 @@ done(int unused)
 	unused = unused;
 }
 
+static void sort_by_coeffs(fm_system* system){
+    
+}
 
 unsigned long long
 dt08rf1(char* aname, char* cname, int seconds)
@@ -202,7 +206,8 @@ dt08rf1(char* aname, char* cname, int seconds)
 	}
     fm_system* system = (fm_system*)malloc(sizeof(fm_system));
     system->rows = parse_files(afile, cfile);
-	print_system(system, count_rows(afile));
+    system->nbr_rows = count_rows(afile);
+	print_system(system);
 
 	if (seconds == 0) {
 		/* Just run once for validation. */
