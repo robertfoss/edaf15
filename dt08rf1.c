@@ -162,7 +162,6 @@ static void
 print_system(fm_system* system, unsigned int nbr_rows)
 {
 	unsigned int i,j;
-	printf("print_fm_rows(): rows=%p  nbr_rows=%u\n", rows, nbr_rows);
 	for(i = 0; i < nbr_rows; ++i) {
 		fm_poly *poly_lesser  = system->rows[i].lesser;
 		fm_poly *poly_greater = system->rows[i].greater;
