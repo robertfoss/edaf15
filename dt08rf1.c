@@ -150,7 +150,7 @@ parse_files(FILE *afile, FILE *cfile)
 
 		fm_rows[ctr_row].greater->poly[0].numerator = read_integer;
 		fm_rows[ctr_row].greater->poly[0].denominator = 1;
-		fm_rows[ctr_row].greater->poly[0].index = ctr_col + 1;
+		fm_rows[ctr_row].greater->poly[0].index = 0;
 		++ctr_row;
 	}
 
@@ -171,7 +171,13 @@ print_system(fm_system* system)
 
 		for(j = 0; j < poly_lesser->poly_len; ++j) {
 			poly_entry = &(poly_lesser->poly[j]);
-			printf("(%lld/%lld)", poly_entry->numerator, poly_entry->denominator);
+
+            if(poly_entry->denominator != 1){
+			    printf("(%lld/%lld)", poly_entry->numerator, poly_entry->denominator);
+            } else {
+                printf("%lld", poly_entry->numerator);
+            }
+
 			if(poly_entry->index > 0) {
 				printf("x_%llu ", poly_entry->index);
 			} else {
@@ -183,7 +189,11 @@ print_system(fm_system* system)
 
 		for(j = 0; j < poly_greater->poly_len; ++j) {
 			poly_entry = &(poly_greater->poly[j]);
-			printf("(%lld/%lld)", poly_entry->numerator, poly_entry->denominator);
+			if(poly_entry->denominator != 1){
+			    printf("(%lld/%lld)", poly_entry->numerator, poly_entry->denominator);
+            } else {
+                printf("%lld", poly_entry->numerator);
+            }
 			if(poly_entry->index > 0) {
 				printf("x_%llu ", poly_entry->index);
 			} else {
@@ -204,9 +214,9 @@ done(int unused)
 	unused = unused;
 }
 
-static void sort_by_coeffs(fm_system* system){
+/*static void sort_by_coeffs(fm_system* system){
     
-}
+}*/
 
 unsigned long long
 dt08rf1(char* aname, char* cname, int seconds)
