@@ -26,6 +26,8 @@ typedef struct {
 
 typedef struct{
     unsigned int nbr_rows;
+    unsigned int nbr_x; //largest x index in system
+    unsigned int curr_nbr_x; //current largest x index, changes with elimination
     fm_row* rows;
 } fm_system;
 
@@ -158,50 +160,68 @@ parse_files(FILE *afile, FILE *cfile)
 	return fm_rows;
 }
 
+static void print_row(fm_row* row){
+
+    unsigned int j;
+
+    fm_poly *poly_lesser  = row->lesser;
+	fm_poly *poly_greater = row->greater;
+	fm_poly_entry *poly_entry;
+
+	for(j = 0; j < poly_lesser->poly_len; ++j) {
+		poly_entry = &(poly_lesser->poly[j]);
+
+        if(poly_entry->denominator != 1){
+            if(poly_entry->numerator > 0 && poly_entry->denominator > 0 && j != 0){
+                printf("+ ");
+            }
+		    printf("(%lld/%lld)", poly_entry->numerator, poly_entry->denominator);
+        } else {
+            if(poly_entry->numerator > 0 && j != 0){
+                printf("+ ");
+            }
+            printf("%lld", poly_entry->numerator);
+        }
+
+		if(poly_entry->index > 0) {
+			printf("x_{%llu} ", poly_entry->index);
+		} else {
+			printf(" ");
+		}
+	}
+
+	printf("<= ");
+
+	for(j = 0; j < poly_greater->poly_len; ++j) {
+		poly_entry = &(poly_greater->poly[j]);
+		if(poly_entry->denominator != 1){
+		    if(poly_entry->numerator > 0 && poly_entry->denominator > 0 && j != 0){
+                printf("+ ");
+            }
+		    printf("(%lld/%lld)", poly_entry->numerator, poly_entry->denominator);
+        } else {
+            if(poly_entry->numerator > 0 && j != 0){
+                printf("+ ");
+            }
+            printf("%lld", poly_entry->numerator);
+        }
+		if(poly_entry->index > 0) {
+			printf("x_{%llu} ", poly_entry->index);
+		} else {
+			printf(" ");
+		}
+	}
+
+	printf("\n");
+}
 
 static void
 print_system(fm_system* system)
 {
-	unsigned int i,j;
+	unsigned int i;
 
 	for(i = 0; i < system->nbr_rows; ++i) {
-		fm_poly *poly_lesser  = system->rows[i].lesser;
-		fm_poly *poly_greater = system->rows[i].greater;
-		fm_poly_entry *poly_entry;
-
-		for(j = 0; j < poly_lesser->poly_len; ++j) {
-			poly_entry = &(poly_lesser->poly[j]);
-
-            if(poly_entry->denominator != 1){
-			    printf("(%lld/%lld)", poly_entry->numerator, poly_entry->denominator);
-            } else {
-                printf("%lld", poly_entry->numerator);
-            }
-
-			if(poly_entry->index > 0) {
-				printf("x_%llu ", poly_entry->index);
-			} else {
-				printf(" ");
-			}
-		}
-
-		printf("<= ");
-
-		for(j = 0; j < poly_greater->poly_len; ++j) {
-			poly_entry = &(poly_greater->poly[j]);
-			if(poly_entry->denominator != 1){
-			    printf("(%lld/%lld)", poly_entry->numerator, poly_entry->denominator);
-            } else {
-                printf("%lld", poly_entry->numerator);
-            }
-			if(poly_entry->index > 0) {
-				printf("x_%llu ", poly_entry->index);
-			} else {
-				printf(" ");
-			}
-		}
-
-		printf("\n");
+		print_row(&(system->rows[i]));
 	}
 }
 
@@ -214,9 +234,68 @@ done(int unused)
 	unused = unused;
 }
 
-/*static void sort_by_coeffs(fm_system* system){
+static void sort_by_coeffs(fm_system* system){ //sort system->rows by coeffs of largest x-index
+
+    unsigned int i;
+    fm_row row;
+    fm_poly *poly_lesser, *poly_greater, *poly;
+    fm_poly_entry sort_entry;
+    long long numerator, denominator;
+    unsigned int nbr_pos, nbr_neg, nbr_zero;
     
-}*/
+    nbr_pos = nbr_neg = nbr_zero = 0;
+    unsigned int nbr_rows = system->nbr_rows;
+    unsigned int nbr_x = system->nbr_x;
+	fm_row *pos_rows = (fm_row*) malloc(sizeof(fm_row)*nbr_rows);
+	fm_row *neg_rows = (fm_row*) malloc(sizeof(fm_row)*nbr_rows);
+	fm_row *zero_rows = (fm_row*) malloc(sizeof(fm_row)*nbr_rows);
+    
+    for(i = 0; i < nbr_rows; ++i){
+        row = system->rows[i];
+        poly_lesser = row.lesser;
+        poly_greater = row.greater;
+        
+        if(poly_lesser->poly_len == 1 && poly_lesser->poly[0].index == 0){ //lesser == const side
+            poly = poly_greater;
+        } else if(poly_greater->poly_len == 1 && poly_greater->poly[0].index == 0){ //greater == const side
+            poly = poly_lesser;
+        } else { //TODO: is this possible?
+            printf("no const side in row: ");
+            print_row(&row);
+            exit(1);
+        }
+        
+        sort_entry = poly->poly[poly->poly_len-1]; //largest x-index term in row
+        
+        if(sort_entry.index != nbr_x){ //coeff == 0
+            zero_rows[nbr_zero++] = row;
+            continue;
+        }
+        
+        numerator = sort_entry.numerator;
+        denominator = sort_entry. denominator;
+        
+        if((numerator > 0 && denominator > 0) || (numerator < 0 && denominator < 0)){ // coeff > 0
+            pos_rows[nbr_pos++] = row;
+        } else { //coeff < 0
+            neg_rows[nbr_neg++] = row;
+        }
+    }    
+    
+    for(i = 0; i < nbr_pos; ++i){
+        system->rows[i] = pos_rows[i];
+    }
+    for(; i < nbr_pos + nbr_neg; ++i){
+        system->rows[i] = neg_rows[i - nbr_pos];
+    }
+    for(; i < nbr_rows; ++i){
+        system->rows[i] = zero_rows[i - (nbr_pos + nbr_neg)];
+    }
+    
+    free(pos_rows);
+    free(neg_rows);
+    free(zero_rows);
+}
 
 unsigned long long
 dt08rf1(char* aname, char* cname, int seconds)
@@ -239,6 +318,9 @@ dt08rf1(char* aname, char* cname, int seconds)
     system->rows = parse_files(afile, cfile);
     system->nbr_rows = count_rows(afile);
 	print_system(system);
+
+    //TODO: move
+    sort_by_coeffs(system);
 
 	if (seconds == 0) {
 		/* Just run once for validation. */
