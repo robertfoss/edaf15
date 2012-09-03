@@ -179,6 +179,10 @@ static void print_row(fm_row* row){
 	for(j = 0; j < poly_lesser->poly_len; ++j) {
 		poly_entry = &(poly_lesser->poly[j]);
 
+        if(poly_entry->numerator == 0){
+            continue;
+        }
+
         if(poly_entry->denominator != 1){
             if(poly_entry->numerator > 0 && poly_entry->denominator > 0 && j != 0){
                 printf("+ ");
@@ -202,6 +206,11 @@ static void print_row(fm_row* row){
 
 	for(j = 0; j < poly_greater->poly_len; ++j) {
 		poly_entry = &(poly_greater->poly[j]);
+		
+		if(poly_entry->numerator == 0){
+            continue;
+        }
+		
 		if(poly_entry->denominator != 1){
 		    if(poly_entry->numerator > 0 && poly_entry->denominator > 0 && j != 0){
                 printf("+ ");
