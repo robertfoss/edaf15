@@ -84,9 +84,11 @@ count_cols(FILE *fp)
 }
 
 
-static fm_row *
-parse_files(FILE *afile, FILE *cfile)
+static fm_system* parse_files(FILE *afile, FILE *cfile)
 {
+
+    fm_system* system = (fm_system*)malloc(sizeof(fm_system));
+    
 	unsigned int i;
 	unsigned int rows = count_rows(afile);
 	unsigned int cols = count_cols(afile);
@@ -134,6 +136,8 @@ parse_files(FILE *afile, FILE *cfile)
 				fm_rows[ctr_row].lesser->poly[ctr_col].index = ctr_col + 1;
 				++ctr_col;
 		}
+        system->nbr_x = ctr_col;
+        system->curr_nbr_x = ctr_col;
 		ctr_col = 0;
 		++ctr_row;
 	}
@@ -157,7 +161,11 @@ parse_files(FILE *afile, FILE *cfile)
 	}
 
 	free(buffer);
-	return fm_rows;
+	
+	system->rows = fm_rows;
+	system->nbr_rows = count_rows(afile);
+	
+	return system;
 }
 
 static void print_row(fm_row* row){
@@ -295,6 +303,8 @@ static void sort_by_coeffs(fm_system* system){ //sort system->rows by coeffs of 
     free(pos_rows);
     free(neg_rows);
     free(zero_rows);
+    printf("sorted on %d?\n", nbr_x);
+    print_system(system);
 }
 
 unsigned long long
@@ -314,9 +324,10 @@ dt08rf1(char* aname, char* cname, int seconds)
 		fprintf(stderr, "could not open file c\n");
 		exit(1);
 	}
-    fm_system* system = (fm_system*)malloc(sizeof(fm_system));
+    /*fm_system* system = (fm_system*)malloc(sizeof(fm_system));
     system->rows = parse_files(afile, cfile);
-    system->nbr_rows = count_rows(afile);
+    system->nbr_rows = count_rows(afile);*/
+	fm_system* system = parse_files(afile, cfile);
 	print_system(system);
 
     //TODO: move
