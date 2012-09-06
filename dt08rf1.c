@@ -6,6 +6,12 @@
 #include <unistd.h>
 #include <limits.h>
 
+#define CHK_BOUND(name, accessed_element, allocated_elements) { \
+if((unsigned int)accessed_element >= (unsigned int)allocated_elements){\
+	printf("Error: %s[%u] accessed when only %u elements are allocated\n", name, (unsigned int)accessed_element, (unsigned int)allocated_elements);\
+}\
+};
+
 static unsigned long long	fm_count;
 static volatile bool		proceed = false;
 
@@ -264,13 +270,9 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
     nbr_pos = nbr_neg = nbr_zero = 0;
     unsigned int nbr_rows = system->nbr_rows;
     unsigned int nbr_x = system->nbr_x;
-	printf("sizeof malloc: %d\n", sizeof(fm_row)*nbr_rows);
 	fm_row *pos_rows = (fm_row*) malloc(sizeof(fm_row)*nbr_rows);
-    printf("KOOO\n");
 	fm_row *neg_rows = (fm_row*) malloc(sizeof(fm_row)*nbr_rows);
-	printf("2\n");
 	fm_row *zero_rows = (fm_row*) malloc(sizeof(fm_row)*nbr_rows);
-	printf("3\n");
     
     for(i = 0; i < nbr_rows; ++i){
         row = system->rows[i];
@@ -289,7 +291,7 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
         
         sort_entry = poly->poly[poly->poly_len-1]; //largest x-index term in row
         
-        if(sort_entry.index != nbr_x){ //coeff == 0
+        if(sort_entry.index != nbr_x || sort_entry.numerator == 0){ //coeff == 0
             zero_rows[nbr_zero++] = row;
             continue;
         }
@@ -303,7 +305,6 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
             neg_rows[nbr_neg++] = row;
         }
     }    
-    
     for(i = 0; i < nbr_pos; ++i){
         system->rows[i] = pos_rows[i];
     }
@@ -313,14 +314,12 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
     for(; i < nbr_rows; ++i){
         system->rows[i] = zero_rows[i - (nbr_pos + nbr_neg)];
     }
-    
     /*free(pos_rows);
     free(neg_rows);
     free(zero_rows);*/
     
     printf("sorted on x_{%d}?\n", nbr_x);
     print_system(system);
-    
     unsigned int *ret = malloc(sizeof(unsigned int)*2);
     ret[0] = nbr_pos;
     ret[1] = nbr_neg;
@@ -331,7 +330,10 @@ int f_m_elim(fm_system* system){
     unsigned int r = system->nbr_rows;
     unsigned int s = system->curr_nbr_x;
     unsigned int s2;
-    
+printf("sizeof(fm_poly_entry): %llu\n", (unsigned long long) sizeof(fm_poly_entry));
+printf("system->nbr_rows: %u\n", system->nbr_rows);
+printf("system->nbr_x: %u\n", system->nbr_x);
+printf("system->curr_nbr_x: %u\n", system->curr_nbr_x);
     fm_poly_entry* t = (fm_poly_entry*)malloc(sizeof(fm_poly_entry)*system->nbr_rows*system->nbr_x);
     fm_poly_entry* q = (fm_poly_entry*)malloc(sizeof(fm_poly_entry)*system->nbr_rows);
 
@@ -342,7 +344,6 @@ int f_m_elim(fm_system* system){
 
     fm_row row;
     fm_poly *poly_lesser, *poly_greater;
-    
     for(i = 0; i < system->nbr_rows; ++i){
         row = system->rows[i];
         poly_lesser = row.lesser;
@@ -366,61 +367,56 @@ int f_m_elim(fm_system* system){
         ns = sort_by_coeffs(system);
         n1 = ns[0];
         n2 = n1 + ns[1];
-        
         for(i = 1; i <= r - 1; ++i){
-            for(j = 1; j <= n2; ++j){
+            for(j = 1; j < n2; ++j){
                 entry = t[i + j];
                 entry.numerator = entry.numerator * t[r + j].denominator;
                 entry.denominator = entry.denominator * t[r + j].numerator;
             }
         }
-        
-        for(j = 1; j <= n2; ++j){
+        for(j = 1; j < n2; ++j){
             entry = q[j];
             entry.numerator = entry.numerator * t[r + j].denominator;
             entry.denominator = entry.denominator * t[r + j].numerator;
         }
-        
         if(n2 > n1){
             int c = 0;
-            b1 = (fm_poly*)malloc(sizeof(fm_poly)*(n2 - (n1 + 1)));
+            b1 = (fm_poly*)malloc(sizeof(fm_poly)*(n2 - (n1)));
             b1->poly_len = 0;
-            fm_poly_entry* tmp = malloc(sizeof(fm_poly_entry)*r);
-            for(j = n1 + 1; j <= n2; ++j){
-                for(i = 1; i <= r - 1; ++i){
-                    tmp[i - 1] = t[i + j]; //TODO: neg?
+            fm_poly_entry* tmp = malloc(sizeof(fm_poly_entry)*(r+1));
+            for(j = n1; j < n2; ++j){//TODO: possibly j=n1+1?
+                for(i = 0; i < r - 1; ++i){
+                    tmp[i] = t[i + j]; //TODO: neg?
                 }
-                tmp[i] = q[j];
+                tmp[i+1] = q[j];
                 b1[c].poly_len++;
                 b1[c].poly = tmp;
                 c++;
             }
-            //free(tmp);
+            free(tmp);
         }else{
             b1 = NULL;
         }
-        
         if(n1 > 0){
             int c = 0;
-            b2 = (fm_poly*)malloc(sizeof(fm_poly)*(n1 - 1));
+            b2 = (fm_poly*)malloc(sizeof(fm_poly)*(n1));
             b2->poly_len = 0;
-            fm_poly_entry* tmp = malloc(sizeof(fm_poly_entry)*r);
-            for(j = 1; j <= n1; ++j){
-                for(i = 1; i <= r - 1; ++i){
-                    tmp[i - 1] = t[i + j]; //TODO: neg?
+			fm_poly_entry* tmp = malloc(sizeof(fm_poly_entry)*(r+1));
+            for(j = 0; j < n1; ++j){ //TODO: possibly j=1?
+                for(i = 0; i < r - 1; ++i){
+                    tmp[i] = t[i + j]; //TODO: neg?
                 }
-                tmp[i] = q[j];
+                tmp[i+1] = q[j];
                 b2[c].poly_len++;
                 b2[c].poly = tmp;
                 c++;
             }
-            //free(tmp);
+            free(tmp);
         }else{
             b2 = NULL;
         }
-        
         if(r == 1){
-            if((b1[0].poly->numerator * b2[0].poly->denominator) > (b2[0].poly->numerator * b1[0].poly->denominator)){
+            if((b1 != NULL && b2 != NULL) && (b1[0].poly->numerator * b2[0].poly->denominator) > (b2[0].poly->numerator * b1[0].poly->denominator)){
                 return 0;
             }
             for(j = n2 + 1; j <= s; ++j){
@@ -430,19 +426,17 @@ int f_m_elim(fm_system* system){
             }
             return 1;
         }
-        
+
         s2 = s - n2 + n1 * (n2 - n1);
         if(s2 == 0){
             return 1;
         }
-        
         r--;
         s = s2;
         
         for(i = 1; i <= r; ++i){
             
         }
-        
     }
 
     
