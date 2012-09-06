@@ -367,14 +367,15 @@ printf("system->curr_nbr_x: %u\n", system->curr_nbr_x);
         ns = sort_by_coeffs(system);
         n1 = ns[0];
         n2 = n1 + ns[1];
-        for(i = 1; i <= r - 1; ++i){
-            for(j = 1; j < n2; ++j){
+        for(i = 0; i < r - 1; ++i){
+            for(j = 0; j < n2; ++j){
                 entry = t[i + j];
                 entry.numerator = entry.numerator * t[r + j].denominator;
                 entry.denominator = entry.denominator * t[r + j].numerator;
             }
         }
-        for(j = 1; j < n2; ++j){
+
+        for(j = 0; j < n2; ++j){
             entry = q[j];
             entry.numerator = entry.numerator * t[r + j].denominator;
             entry.denominator = entry.denominator * t[r + j].numerator;
