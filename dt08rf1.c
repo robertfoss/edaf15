@@ -368,14 +368,16 @@ int f_m_elim(fm_system* system){
         n2 = n1 + ns[1];
         
         for(i = 1; i <= r - 1; ++i){
-            for(j = 1; j <= n2; ++j){
+//        for(j = 1; j <= n2; ++j){ // Will access outside of allocation bounds
+            for(j = 1; j < n2; ++j){
                 entry = t[i + j];
                 entry.numerator = entry.numerator * t[r + j].denominator;
                 entry.denominator = entry.denominator * t[r + j].numerator;
             }
         }
         
-        for(j = 1; j <= n2; ++j){
+//        for(j = 1; j <= n2; ++j){ // Will access outside of allocation bounds
+        for(j = 1; j < n2; ++j){
             entry = q[j];
             entry.numerator = entry.numerator * t[r + j].denominator;
             entry.denominator = entry.denominator * t[r + j].numerator;
