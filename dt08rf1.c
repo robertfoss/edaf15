@@ -420,7 +420,7 @@ printf("system->curr_nbr_x: %u\n", system->curr_nbr_x);
             if((b1 != NULL && b2 != NULL) && (b1[0].poly->numerator * b2[0].poly->denominator) > (b2[0].poly->numerator * b1[0].poly->denominator)){
                 return 0;
             }
-            for(j = n2 + 1; j <= s; ++j){
+            for(j = n2; j < s; ++j){
                 if(q[j].numerator < 0){
                     return 0;
                 }
