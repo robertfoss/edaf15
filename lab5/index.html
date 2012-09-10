@@ -1,0 +1,74 @@
+<html>
+<h2>Instruction execution in a superscalar processor</h2>
+
+<em>The purpose of this lab is to illustrate instruction execution in
+a superscalar processor, the IBM Power 970MP, at the clock cycle level.</em>
+<ol>
+<li>Download the file 
+ <a href="http://fileadmin.cs.lth.se/cs/Education/EDAF15/lab5.tar.bz2">lab5.tar.bz2</a>
+and expand it using the UNIX command <b>tar xvf lab5.tar.bz2</b>.
+<br> <br>
+
+<li>Put the directory <b>/usr/local/cs/EDAF15/ibm/sim_ppc/bin</b>
+into your <b>PATH</b> environment variable, for instance by 
+first typing <b>bash</b> in a terminal window and then give
+the command: <br><b>PATH=$PATH:/usr/local/cs/EDAF15/ibm/sim_ppc/bin</b>
+<br> <br>
+
+<li> Study the source code in <b>intadd.c</b>. 
+The reason for having two iterations in the outer loop is to avoid
+having cache misses disturbing us initially.
+Give the command <b>scrollpv&</b>
+<br> <br>
+<li> Using the <b>File</b> menu, open the file <b>intadd.pipe</b>.
+<br> <br>
+<li> To the right you can see four columns:
+<ul>
+<li>Iop Id --- this is the internal instruction id number and usually corresponds to an ordinary Power instruction.
+<li>Mnemonic --- description of the instruction
+<li>Inst Addr --- Instruction address in base 16
+<li>Data Addr --- Data address in base 16
+</ul>
+Scroll down to Iop Id <b>121</b> which is the first add in the
+very last loop iteration.
+<br> <br>
+<li>The largest part of the tool --- where you should see lots of dots --- displays the instruction execution but initially you cannot see anything. Scroll
+horizontally to clock cycle 2920.
+
+<br> <br>
+<li>How frequently does a new iteration of the inner loop start? Compare
+the clock cycles of the start of the decode of the instruction at address 
+<b>1000118c</b>
+<br> <br>
+<li>Keep this instance of <b>scrollpv</b>
+ and start another instance of <b>scrollpv</b>.
+<br> <br>
+<li>Load the file <b>floatadd.pipe</b> and scroll down to Iop Id <b>240></b>.
+<br> <br>
+<li>Try to find that instruction in the pipeline view. Despite the Iop Id is
+approximately twice that of the corresponding last integer add, that instruction
+is not executed after the double amount of clock cycles.
+<br> <br>
+<li>Compare the execution of the two programs. How many clock cycles do an
+integer add and an floating point add take to execute, respectively?
+<br> <br>
+<li>Can the second <b>fadds</b> start executing before the 
+first is finished? Why or why not? Check what happens in the pipeline!
+<br> <br>
+<li>Explain why the floating point program is not significantly slower 
+than the integer program. Hint: what does the <b>B</b> denote in the
+pipeline and how can the occurence of that affect the execution time?
+<br> <br>
+<li>How can you see in the pipeline viewer that register renaming is done?
+Hint: you cannot see it directly but you can infer it from the execution!
+
+<br><br>
+In a new pipeline viewer (scrollpv command) load the file <b>floatsum.pipe</b>.
+Explain why this program is slower than the <b>floatadd</b> program. Feel
+free to check the source code in <b>floatsum.c</b>!
+
+<br><br>
+Finally, explain why the program <b>xor</b> is much faster than 
+<b>floatsum</b>
+
+</html>

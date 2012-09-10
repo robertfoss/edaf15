@@ -1,0 +1,768 @@
+
+
+[watt]: INFO - run started:   Thu Apr 26 14:47:57 2012
+[watt]: INFO -          on system: mach.ludat.lth.se
+[watt]: INFO -          by:        js
+
+
+dp in wattinit is 10471008
+[wattinit]: INFO - Workload format is qtrace
+[wattinit]: INFO - trace 0 is stdin type qtrace
+[DEBUG] For trace 0 argv (7) addr = 0xffb1baf0
+[DEBUG] there are -1 parms up to --WORKLOAD
+[DEBUG] there are 3 parms up to --DRIVER
+[wattinit]: INFO - Driver for run will be otimer.scroll.java
+[wattinit]: INFO - initializing qtrace stdin, nonspeculative
+[wattinit]: INFO - workload options 
+          stdin
+          -error_threshold
+          999999999
+reading -
+[qreader]: WARNING - stdin has no initial address in the file header record
+[qreader]: INFO - stdin initial address 0000000000000000
+qreader initialization complete
+
+ arch inst 3  time 1520.000000 
+ trace 0 completed arch 3 int 4 
+ CMPL: CPI---------------------------------------         506.66667 
+
+Reset stats - Instruction mix before reset:
+No instructions counted.
+ trace 0 ended on read_inst returns false at time 20449.000000
+ arch inst 608  time 19910.000000  reset_stats 
+ trace 0 completed arch 608 int 753 
+
+IBM CONFIDENTIAL - IBM CONFIDENTIAL - IBM CONFIDENTIAL - IBM CONFIDENTIAL
+
+
+
+***********************************************************************************
+*                    Timer Statistics Generated During Run                        *
+***********************************************************************************
+
+
++---------------------------------------------------------------------------------+
+|                          Branch Prediction Stats                                |
++---------------------------------------------------------------------------------+
+
+
+BHT (Branch History Table) accuracy for completed branches 
+---------------------------------------------------------- 
+Probability the BHT guessed correctly for:
+Non Taken Unconditional Branch Immediate =    nan
+    Taken Unconditional Branch Immediate = 1.0000
+Non Taken Conditional Branch Immediate   = 0.8387
+    Taken Conditional Branch Immediate   = 0.5208
+Non Taken Unconditional Branch to Link   =    nan
+    Taken Unconditional Branch to Link   = 0.8750
+Non Taken Conditional Branch to Link     =    nan
+    Taken Conditional Branch to Link     =    nan
+Non Taken Unconditional Branch to Count  =    nan
+    Taken Unconditional Branch to Count  = 0.0000
+Non Taken Conditional Branch to Count    =    nan
+    Taken Conditional Branch to Count    =    nan
+
+
+Summary of BHT accuracy for completed branches
+----------------------------------------------
+Probability the BHT guessed taken and the branch was taken          = 0.5208 
+Probability the BHT guessed NOT taken and the branch was NOT taken  = 0.8387 
+Probability the Link Stack was correct                              = 0.8750 
+
+Count Cache Stats: at prediction time
+-------------------------------------
+Probability conditional branch to count hits in count cache         =    nan 
+Probability conditional branch to count hits and cache is correct   =    nan 
+Probability unconditional branch to count hits in count cache       = 1.0000
+Probability unconditional branch to count hits and cache is correct = 0.0000 
+
+
+Number of branch mispredict flushes  =       32
+
+
++---------------------------------------------------------------------------------+
+|                                Ifetch Stats                                     |
++---------------------------------------------------------------------------------+
+
++--------------------------+ 
+| Ifetch translation stats | 
++--------------------------+ 
+
+Ifetches
+--------
+Ifetch hits in the i-erat  =      165
+Ifetch misses in the i-erat=       12
+Ifetch hits in the TLB     =        0
+Ifetch misses in the TLB   =        7
+
+
+Ifetch translation summary
+--------------------------
+Probability ifetch request hits in i-erat                    = 0.9550
+Probability ifetch request misses in i-erat but hits in TLB  = 0.0000
+
+
+Upon TLB miss, location i-fetch translation data was sourced
+------------------------------------------------------------
+Location                  Number sourced
+--------                  --------------
+L2                                 1   
+Memory                             6   
+
+
++--------------+ 
+| Icache stats | 
++--------------+ 
+
+Icahce summary
+--------------
+Probability ifetch request hits in L1                               = 0.5539
+Probability ifetch request misses in L1 but hits in prefetch buffer = 0.1719
+Probability ifetch request misses in L1 but hits in L2              = 0.5000
+Average time an ifetch miss waits until data back                   = 130.1143
+
+
+Upon icache miss, location i-fetch data was sourced
+---------------------------------------------------
+Location                  Number sourced
+--------                  --------------
+L2                                12   
+Memory                            13   
+
+
+Upon i-prefetch generation, location i-prefetch data was sourced
+      (i-prefetches are installed in the prefetch buffer)
+----------------------------------------------------------------
+Location                  Number sourced
+--------                  --------------
+L2                                 1       
+Memory                            13       
+
+
++---------------------------------------------------------------------------------+
+|                                Dfetch Stats                                     |
++---------------------------------------------------------------------------------+
+
++-----------------------------+ 
+| Data side translation stats | 
++-----------------------------+ 
+
+Translation summary stats
+-------------------------
+Probability a load  will hit in the erat on its first try    = 0.9311
+Probability a store will hit in the erat on its first try    = 0.9419
+Probability any LSU op will hit in the erat on its first try = 0.9333
+Probability a load  will hit in the erat at any time         = 0.1982
+Probability a store will hit in the erat at any time         = 0.2493
+Probability any LSU op will hit in the erat at any time      = 0.2069
+Probability of erat miss hitting in the TLB                  = 0.0000
+
+
+Upon TLB miss, location translation data was sourced
+----------------------------------------------------
+Location              Loads              Stores            All   
+--------            ---------           --------         --------
+L2                         1                  1                2
+Memory                    12                  0               12
+
+
++---------------------+ 
+| Data prefetch stats | 
++---------------------+ 
+
+Data prefetch stream summary stats
+----------------------------------
+Number of streams (X)     % of cycles X streams were active
+---------------------     ---------------------------------
+ 0                            70.2109
+ 1                            29.7891
+
+
+Data prefetch behavior stats
+----------------------------
+
+STREAM ALLOCATION STATS - GOOD
+------------------------------
+load miss missed prefetch filter queue (PFQ) and allocated a new entry                          =        25
+load miss hit in the PFQ and created a stream in the prefetch stream queue (PRQ or PSQ)         =         2
+load matched on a stream and advanced it                                                        =         6
+L1 prefetch missed PFQ or hit the PFQ but has no stream either way allocated a stream           =         2
+L1 prefetch hit on PFQ and updated entry's LRU                                                  =         4
+load/prefetch hit on a stream that is eligible for replacement                                  =         0
+allocated a stream going up (if current load is in the lower 3/4 of the cache line)             =         2
+allocated a stream going down (if current load is in the upper 1/4 of the cache line)           =         0
+
+STREAM ALLOCATION STATS - BAD
+-----------------------------
+duplicate stream found after update and stream was cleared                                      =         0
+load miss hit in the PFQ but there were too many streams already so no new ones were created    =         0
+load miss hit in the PFQ but already had a stream -> update (usually due to a killed L1 touch)  =         2
+
+PREFETCH SENT STATS - GOOD
+--------------------------
+Number of L1 prefetch created                                                                   =         8
+Number of L1 sent to gps                                                                        =         6
+Number of L2 sent to gps                                                                        =        12
+
+PREFETCH STALL STATS - BAD
+--------------------------
+Number of cycles that L1 prefetches were stalled by various conditions                          =         0
+cycles in which all L2 touches waiting were held of by the memory subsystem's feed back signal  =         0
+
+PREFETCH KILL STATS - BAD
+-------------------------
+L2 prefetch killed by a pteg (tlb translation) request while going out to the memory subsystem  =         0
+L2 prefetch killed in L2 touch table (holds L2 prefetches before they are sent out)             =         2
+L1 touch killed due to hitting in L1                                                            =         0
+L1 touch killed due to NTC load rejecting                                                       =         0
+L1 touch killed due to hit on the LMQ (Load Miss Queue) entry                                   =         2
+L1 touch killed due to Congruence Class conflict with other LSU op                              =         0
+L1 touch killed due to memory subsystem d-fetch hold-off signal on while L1 was in progress     =         0
+L1 touch killed due to crossing a page                                                          =         0
+L1 touch killed due to the LMQ being full when a prefetch went to make its request              =         0
+L1 touch killed due to being overwritten by the next L1 prefetch for that stream                =         0
+
+DST prefetching stats
+---------------------
+DST hits in L1 so no stream is started                                                          =         0 
+DST hits LMQ entry so no stream is started                                                      =         0 
+DST made memory request for its line then when to the prefetch logic to possibly start a stream =         0 
+DSS ALL (kill all streams) so all streams were killed                                           =         0 
+DSS ONE (kill one stream) so one stream was killed                                              =         0 
+illegal stream (either negative stride or stride > 128)                                         =         0 
+stream was killed by new stream for same stream number                                          =         0 
+stream touched all of its lines and was killed                                                  =         0 
+started a stream                                                                                =         0 
+total number of L2 touches created across all streams for DSTs                                  =         0 
+
+
++------------------+ 
+| Data cache stats | 
++------------------+ 
+
+L1 Data cache summary stats, Probability that:
+----------------------------------------------
+a load that has never been rejected will hit in L1                                  = 0.6329
+any load will hit in L1 (includes rejected loads)                                   = 0.1368
+a load that has never been rejected will hit on an LMQ entry                        = 0.4828
+any load will hit on an LMQ entry (includes rejected loads)                         = 0.9623
+a load that has never been rejected will hit on an LMQ entry and won't be rejected  = 0.4286
+any load will hit on an LMQ entry and won't be rejected (includes rejected loads)   = 0.0170
+a load that misses L1 will hit in L2                                                = 0.1667
+Average time a load miss waits for its first sector back                            = 314.8333
+Average time a load hit reload waits for its first sector to return form memory     = 258.08
+
+
+Upon L1 dcache miss / L1 dcache prefetch, location data was sourced
+-------------------------------------------------------------------
+Location              Loads             Prefetches
+--------            ---------           ----------
+L2                         5                  5
+Memory                    25                  1
+
+
++---------------------------------------------------------------------------------+
+|                              Resource usage stats                               |
++---------------------------------------------------------------------------------+
+
++----------------------+ 
+| Execution unit stats | 
++----------------------+ 
+
+Execution unit issue summary
+----------------------------
+ Unit            % of cycles an op was issued to unit
+------           ------------------------------------
+FXU0                          4.229031 
+FXU1                          7.729784 
+LSU0                          6.946258 
+LSU1                          9.623305 
+FPU0                          0.000000 
+FPU1                          0.000000 
+BRU                           0.552486 
+CRU                           0.110497 
+VMX Permute                   0.000000 
+VMX Simple                    0.000000 
+VMX Complex                   0.000000 
+VMX Float                     0.000000 
+VMX Store                     0.000000 
+
+
++----------------------------+ 
+| Queue resource usage stats | 
++----------------------------+ 
+
+Information queue usage stats, Average number of:
+-------------------------------------------------
+BIQ (Branch Information Queue) entries in use                             = 2.3299
+EMQ (Erat Miss Queue) entries in use                                      = 0.5070
+PSQ (Data Prefetch Stream Queue) entries in use                           = 0.2979
+CLB (Instruction Fetch Buffer) entries in use                             = 2.0451
+GCT (Global Completion Table) entries in use                              = 3.8494
+LRQ (Load Reorder Queue) entries in use                                   = 3.4552
+SRQ (Store Reorder Queue) entries in use                                  = 1.7403
+Architected ops in the system (from dispatch to completion)               = 10.8467
+Internal ops in the system (from dispatch to completion)                  = 13.1109
+
+
+Issue queue usage stats, Average number of ops in the:
+------------------------------------------------------
+Branch Issue Queue                                                        = 2.0516
+Fixed Point / Load Store Issue Queue rail/slot 0                          = 1.3815
+Fixed Point / Load Store Issue Queue rail/slot 1                          = 1.3891
+Fixed Point / Load Store Issue Queue rail/slot 2                          = 0.7681
+Fixed Point / Load Store Issue Queue rail/slot 3                          = 0.5204
+Fixed Point Issue Queue all rails/slots                                   = 4.0591
+Floating Point Issue Queue rail/slot 0                                    = 0.0000
+Floating Point Issue Queue rail/slot 1                                    = 0.0000
+Floating Point Issue Queue rail/slot 2                                    = 0.0000
+Floating Point Issue Queue rail/slot 3                                    = 0.0000
+Floating Point Issue Queue all rails/slots                                = 0.0000
+VMX Shared Issue Queue (store, simple, complex, float)                    = 0.0000
+VMX Permute Issue Queue                                                   = 0.0000
+
+
++-----------------------------+ 
+| Rename Resource usage stats | 
++-----------------------------+ 
+
+Rename Resource usage stats, Average number of:
+-------------------------------------------------
+GPR renames in use        = 41.9790
+FPR renames in use        = 32.0016
+CR renames in use         = 10.3126
+Link/Count renames in use = 2.6237
+XER renames in use        = 4.0667
+FPSCR renames in use      = 0.0000
+VMX renames in use        = 32.0016
+
+
++---------------------------------------------------------------------------------+
+|                             Instruction Frequency                               |
++---------------------------------------------------------------------------------+
+
+
+This table counts architected instructions
+
++-------------------------------ARCH-OP-FREQUENCIES------------------------------+
++----MNEMONIC-----+--------ARCH-OPS---------+--------EXPANSIONS-------+---RATIO--+
++-----------------+----COUNT---+--FREQUENCY-+----COUNT---+--FREQUENCY-+----------+
+|    arch op name | # of arch  | % of total |  # of iops | % of total | ratio of |
+|                 |    ops     |   arch ops | created by |    iops    | iop/arch |
+|                 |  executed  |  executed  |  these ops |  executed  | executed |
++-----------------+------------+------------+------------+------------+----------+
+
+This table counts internal instructions
+
++---------------------------------IOP-FREQUENCIES--------------------------------------+
++----MNEMONIC-----+-----FROM-ANY-OP------+--FROM-NON-EXPANDED---+-----FROM-EXPANDED----+
++-----------------+---COUNT--+-FREQUENCY-+---COUNT--+-FREQUENCY-+---COUNT--+-FREQUENCY-+
+| internal op name| # created| % of any  | # created| % of non  | # created|   % of    |
+|                 | from any |  op total | from non | expanded  |    from  |  expanded |
+|                 |    op    |           | expanded | op total  | expanded |  op total |
++-----------------+----------+-----------+----------+-----------+----------+-----------+
+
+
+
+
+IBM CONFIDENTIAL - IBM CONFIDENTIAL - IBM CONFIDENTIAL - IBM CONFIDENTIAL
+
+
++-------------------------------ARCH-OP-FREQUENCIES------------------------------+
++----MNEMONIC-----+--------ARCH-OPS---------+--------EXPANSIONS-------+---RATIO--+
++-----------------+----COUNT---+--FREQUENCY-+----COUNT---+--FREQUENCY-+----------+
+|              ld |         91 |    14.9425 |         91 |    12.0530 |    1.000 |
+|            addi |         64 |    10.5090 |         64 |     8.4768 |    1.000 |
+|             std |         51 |     8.3744 |        102 |    13.5099 |    2.000 |
+|             add |         42 |     6.8966 |         42 |     5.5629 |    1.000 |
+|        bc.001zy |         41 |     6.7323 |         41 |     5.4305 |    1.000 |
+|            lwzx |         40 |     6.5681 |         40 |     5.2980 |    1.000 |
+|        bc.011zy |         36 |     5.9113 |         36 |     4.7682 |    1.000 |
+|             stw |         25 |     4.1051 |         50 |     6.6225 |    2.000 |
+|            cmpd |         23 |     3.7767 |         23 |     3.0464 |    1.000 |
+|           cmpdi |         21 |     3.4483 |         21 |     2.7815 |    1.000 |
+|            lwzu |         20 |     3.2841 |         40 |     5.2980 |    2.000 |
+|              or |         14 |     2.2989 |         14 |     1.8543 |    1.000 |
+|             lwz |         13 |     2.1346 |         13 |     1.7219 |    1.000 |
+|               b |         11 |     1.8062 |         11 |     1.4570 |    1.000 |
+|        mfspr_LR |          9 |     1.4778 |          9 |     1.1921 |    1.000 |
+|            stdu |          9 |     1.4778 |         27 |     3.5762 |    3.000 |
+|             blr |          8 |     1.3136 |          8 |     1.0596 |    1.000 |
+|           cmpwi |          7 |     1.1494 |          7 |     0.9272 |    1.000 |
+|               b |          7 |     1.1494 |          7 |     0.9272 |    1.000 |
+|          rldicr |          7 |     1.1494 |          7 |     0.9272 |    1.000 |
+|        mtspr_LR |          7 |     1.1494 |          7 |     0.9272 |    1.000 |
+|           addis |          6 |     0.9852 |          6 |     0.7947 |    1.000 |
+|         rldicl. |          6 |     0.9852 |         12 |     1.5894 |    2.000 |
+|            cmpl |          6 |     0.9852 |          6 |     0.7947 |    1.000 |
+|         nop_ori |          5 |     0.8210 |          5 |     0.6623 |    1.000 |
+|       mtspr_CTR |          5 |     0.8210 |          5 |     0.6623 |    1.000 |
+|            bctr |          3 |     0.4926 |          3 |     0.3974 |    1.000 |
+|            cmpw |          3 |     0.4926 |          3 |     0.3974 |    1.000 |
+|           extsw |          3 |     0.4926 |          3 |     0.3974 |    1.000 |
+|        bc.1z01y |          2 |     0.3284 |          2 |     0.2649 |    1.000 |
+|          rldicl |          2 |     0.3284 |          2 |     0.2649 |    1.000 |
+|            mfcr |          2 |     0.3284 |         23 |     3.0464 |   11.500 |
+|             and |          2 |     0.3284 |          2 |     0.2649 |    1.000 |
+|            subf |          2 |     0.3284 |          2 |     0.2649 |    1.000 |
+|      mtocrf_cr4 |          2 |     0.3284 |          2 |     0.2649 |    1.000 |
+|             lwa |          2 |     0.3284 |          4 |     0.5298 |    2.000 |
+|              sc |          1 |     0.1642 |          1 |     0.1325 |    1.000 |
+|            xori |          1 |     0.1642 |          1 |     0.1325 |    1.000 |
+|             lbz |          1 |     0.1642 |          1 |     0.1325 |    1.000 |
+|             stb |          1 |     0.1642 |          2 |     0.2649 |    2.000 |
+|             ldx |          1 |     0.1642 |          1 |     0.1325 |    1.000 |
+|          cntlzd |          1 |     0.1642 |          1 |     0.1325 |    1.000 |
+|      mtocrf_cr3 |          1 |     0.1642 |          1 |     0.1325 |    1.000 |
+|             xor |          1 |     0.1642 |          1 |     0.1325 |    1.000 |
+|           sradi |          1 |     0.1642 |          1 |     0.1325 |    1.000 |
+|          sradi. |          1 |     0.1642 |          2 |     0.2649 |    2.000 |
+|             or. |          1 |     0.1642 |          1 |     0.1325 |    1.000 |
+|             ldu |          1 |     0.1642 |          2 |     0.2649 |    2.000 |
++-----------------+------------+------------+------------+------------+----------+
+|          *Total |        609 |   100.0000 |        755 |   100.0000 |    1.240 |
++-----------------+------------+------------+------------+------------+----------+
+ * The Total includes 2 unconditional branches that were inserted to fix trace
+   address discontinuities.
+
+
++---------------------------------IOP-FREQUENCIES--------------------------------------+
++----MNEMONIC-----+-----FROM-ANY-OP------+--FROM-NON-EXPANDED---+-----FROM-EXPANDED----+
++-----------------+---COUNT--+-FREQUENCY-+---COUNT--+-FREQUENCY-+---COUNT--+-FREQUENCY-+
+|            addi |       94 |   12.4503 |       64 |   13.0612 |       30 |   11.3208 |
+|              ld |       91 |   12.0530 |       91 |   18.5714 |        0 |    0.0000 |
+|          STAGEN |       86 |   11.3907 |        0 |    0.0000 |       86 |   32.4528 |
+|             std |       60 |    7.9470 |        0 |    0.0000 |       60 |   22.6415 |
+|             add |       42 |    5.5629 |       42 |    8.5714 |        0 |    0.0000 |
+|        bc.001zy |       41 |    5.4305 |       41 |    8.3673 |        0 |    0.0000 |
+|            lwzx |       40 |    5.2980 |       40 |    8.1633 |        0 |    0.0000 |
+|        bc.011zy |       36 |    4.7682 |       36 |    7.3469 |        0 |    0.0000 |
+|             stw |       25 |    3.3113 |        0 |    0.0000 |       25 |    9.4340 |
+|              or |       23 |    3.0464 |       14 |    2.8571 |        9 |    3.3962 |
+|            cmpd |       23 |    3.0464 |       23 |    4.6939 |        0 |    0.0000 |
+|           cmpdi |       21 |    2.7815 |       21 |    4.2857 |        0 |    0.0000 |
+|            lwzu |       20 |    2.6490 |        0 |    0.0000 |       20 |    7.5472 |
+|               b |       16 |    2.1192 |       16 |    3.2653 |        0 |    0.0000 |
+|             lwz |       15 |    1.9868 |       13 |    2.6531 |        2 |    0.7547 |
+|            mflr |        9 |    1.1921 |        9 |    1.8367 |        0 |    0.0000 |
+|          rldicl |        8 |    1.0596 |        2 |    0.4082 |        6 |    2.2642 |
+|         nop_ori |        8 |    1.0596 |        5 |    1.0204 |        3 |    1.1321 |
+|             blr |        8 |    1.0596 |        8 |    1.6327 |        0 |    0.0000 |
+|           cmpxi |        7 |    0.9272 |        0 |    0.0000 |        7 |    2.6415 |
+|            mtlr |        7 |    0.9272 |        7 |    1.4286 |        0 |    0.0000 |
+|          rldicr |        7 |    0.9272 |        7 |    1.4286 |        0 |    0.0000 |
+|           cmpwi |        7 |    0.9272 |        7 |    1.4286 |        0 |    0.0000 |
+|           addis |        6 |    0.7947 |        6 |    1.2245 |        0 |    0.0000 |
+|           cmpld |        6 |    0.7947 |        6 |    1.2245 |        0 |    0.0000 |
+|           extsw |        5 |    0.6623 |        3 |    0.6122 |        2 |    0.7547 |
+|           mtctr |        5 |    0.6623 |        5 |    1.0204 |        0 |    0.0000 |
+|            bctr |        3 |    0.3974 |        3 |    0.6122 |        0 |    0.0000 |
+|          mfcrfa |        3 |    0.3974 |        0 |    0.0000 |        3 |    1.1321 |
+|          mfcrfb |        3 |    0.3974 |        0 |    0.0000 |        3 |    1.1321 |
+|          mfcrfc |        3 |    0.3974 |        0 |    0.0000 |        3 |    1.1321 |
+|          mfcrfd |        3 |    0.3974 |        0 |    0.0000 |        3 |    1.1321 |
+|            cmpw |        3 |    0.3974 |        3 |    0.6122 |        0 |    0.0000 |
+|           sradi |        2 |    0.2649 |        1 |    0.2041 |        1 |    0.3774 |
+|       mtcrf_cr4 |        2 |    0.2649 |        2 |    0.4082 |        0 |    0.0000 |
+|             and |        2 |    0.2649 |        2 |    0.4082 |        0 |    0.0000 |
+|        bc.1z01y |        2 |    0.2649 |        2 |    0.4082 |        0 |    0.0000 |
+|            subf |        2 |    0.2649 |        2 |    0.4082 |        0 |    0.0000 |
+|             or. |        1 |    0.1325 |        1 |    0.2041 |        0 |    0.0000 |
+|             ldu |        1 |    0.1325 |        0 |    0.0000 |        1 |    0.3774 |
+|             ldx |        1 |    0.1325 |        1 |    0.2041 |        0 |    0.0000 |
+|             stb |        1 |    0.1325 |        0 |    0.0000 |        1 |    0.3774 |
+|              sc |        1 |    0.1325 |        1 |    0.2041 |        0 |    0.0000 |
+|             xor |        1 |    0.1325 |        1 |    0.2041 |        0 |    0.0000 |
+|       mtcrf_cr3 |        1 |    0.1325 |        1 |    0.2041 |        0 |    0.0000 |
+|            xori |        1 |    0.1325 |        1 |    0.2041 |        0 |    0.0000 |
+|          cntlzd |        1 |    0.1325 |        1 |    0.2041 |        0 |    0.0000 |
+|          insert |        1 |    0.1325 |        1 |    0.2041 |        0 |    0.0000 |
+|             lbz |        1 |    0.1325 |        1 |    0.2041 |        0 |    0.0000 |
++-----------------+----------+-----------+----------+-----------+----------+-----------+
+|           Total |      755 |   100.0000|      490 |   100.0000|      265 |   100.0000|
++-----------------+----------+-----------+----------+-----------+----------+-----------+
+
+
++---------------------------------------------------------------------------------+
+|                                  CPI Stack                                      |
++---------------------------------------------------------------------------------+
+
+   The CPI stack which follows breaks down the final CPI of the run into 
+   various CPI components.  The view is from the front end of the machine back.
+   In each cycle the machine either completes a group or does not, so for
+   each cycle in which no group completed the timer will try and account for why.
+   There are 3 modes of counting.  The first is when there are no groups waiting
+   to complete (groups begin waiting as soon as they are dispatched).  During this
+   time the pipeline is empty and the cycles will be counted in a bucket under 
+   "pipeline_empty".  The second mode of counting occurs when a group has been
+   dispatched and is waiting to complete but has experienced no stall events in the
+   pipelines so the cycles are counted under "pipeline_refill".  The final and
+   most common mode of counting is when there are groups waiting to complete and they
+   experienced stall conditions during their lifetime. If the group cannot complete
+   on the cycle in which it became eligible the timer will look back over the life of all
+   instructions in the group starting with dispatch and moving towards finish and it
+   will find the instruction within that group that went the deepest into the machine
+   before encountering a stall condition.  The timer will then begin examining the
+   stall events that happened to that instruction beginning with dispatch and
+   incrementing that reasons bucket and decrement that stall condition.  If that
+   instruction's stalls are exhausted before the group completes the next instruction
+   will be chosen in a similar manner.  If there is a tie the older instruction is
+   chosen.  On the cycle when a group does completes it is counted in the 
+   "Complete_current_grp" bucket.
+
+   In the end the timer has made a count for each cycle simulated in one of the many
+   reason counts.  This allows the timer to figure the fraction of the CPI for various
+   stalls.  This can be used to compare against similar runs to provide insight into the
+   behavior of the machine.  Please note that not all stall reasons are valid for a given
+   timer configuration.
+
+   Here is a break down of the various reason counts:
+
+............................ pipeline_contention......... = This mode of counting occurs 
+                                                            when there is a group waiting
+                                                            to complete
+CMPL: Wait_for_dispatch_requirements                      = groups was held at dispatch 
+                                                            waiting for dispatch requirements
+CMPL: Wait_for_execution_unit                             = sum of waiting for one of the 
+                                                            following type of execution units 
+                                                            (pipelines) to be free
+CMPL:      cr_unit/vmx_unit                               = conditional register logical unit or
+                                                            a VMX unit (store,simple,complex,float,
+                                                            permute)
+CMPL:      br_unit                                        = branch unit
+CMPL:      fpu_unit                                       = floating point unit
+CMPL:      fxu_unit                                       = fixed point unit
+CMPL:      lsu_unit                                       = load store unit
+CMPL: Wait_for_sources                                    = waiting a source register to be written
+                                                            by one of the following type of op
+CMPL:      written_by_br                                  = branch
+CMPL:      written_by_cr                                  = conditional logical
+CMPL:      written_by_fp                                  = floating point
+CMPL:      written_by_fp_store                            = floating point store
+CMPL:      written_by_fp_load                             = floating point load
+CMPL:      written_by_fx                                  = fixed point
+CMPL:      written_by_fx_store_agen                       = fixed point store address generation
+CMPL:      written_by_fx_store_data                       = fixed point store data
+CMPL:      written_by_fx_load                             = fixed point load
+CMPL:      written_by_vmx                                 = VMX
+CMPL: Wait_for_serializer_to_be_next_group                = waiting for op to be next to complete (NTC)
+CMPL: Wait_for_agen                                       = sum of ops waiting in the address generation
+                                                            of the LSU pipe for the following reasons
+CMPL:      result_bus_busy_store                          = store rejected due to the result bus being busy
+CMPL:      result_bus_busy_load                           = load  rejected due to the result bus being busy
+CMPL:      erat_dir_update_store                          = store rejected due to the erat directory being 
+                                                            busy with an update
+CMPL:      erat_dir_update_load                           = load  rejected due to the erat directory being
+                                                            busy with an update
+CMPL:      L1D_dir_update_store                           = store rejected due to the L1 data cache directory
+                                                            being busy with an update
+CMPL:      L1D_dir_update_load                            = load  rejected due to the L1 data cache directory
+                                                            being busy with an update
+CMPL: Wait_for_translation                                = sum of ops waiting due to various address
+                                                            translation problems
+CMPL:      erat_miss_store                                = store rejected due to missing the erat
+CMPL:      tlb_miss_store                                 = store rejected due to missing the erat and TLB
+CMPL:      erat_miss_load                                 = load  rejected due to missing the erat
+CMPL:      tlb_miss_load                                  = load  rejected due to missing the erat and TLB
+CMPL: Wait_load_rejected                                  = sum of load waiting rejected to being rejected 
+                                                            because of one of the following reasons
+CMPL:      load_hit_dcbz                                  = load hits a dcbz or if dcache is interleaved then
+                                                            the bank is busy
+CMPL:      load_hit_stwcx                                 = load hits a stwcx
+CMPL:      load_hit_lwarx                                 = load hits a lwarx
+CMPL:      lwarx_hit_earlier_lwarx                        = lwarx hits earlier lwarx
+CMPL:      load_hit_store_diff_grp_contained_sdq_not_read = load hits a store in a different group and the
+                                                            load's address is contained by the store's
+                                                            but the store's data is not ready
+CMPL:      load_hit_store_diff_grp_overlap_not_contained  = load hit store in a different group but the load's
+                                                            address is not contained by the store's
+CMPL:      load_defers_to_prefetch                        = load  defers to a L1 touch using memory interface 
+CMPL:      store_defers_to_prefetch                       = store defers to a L1 touch using memory interface 
+CMPL:      load_hit_reload_lmq_full                       = a load miss hits in the LMQ (Load Miss Queue) but
+                                                            there are too many misses on that LMQ entry
+CMPL:      load_hit_reload_both_from_same_side            = a load miss hits in the LMQ but the load miss already
+                                                            there is from the same side
+CMPL:      load_hit_reload_store_invalidated              = a load miss hits in the LMQ but a store has
+                                                            invalidated the entry as is had newer data
+CMPL:      load_hit_reload_sector_already_came            = a load miss hits in the LMQ but it's sectors have
+                                                            already begun coming back form memory
+CMPL:      load_hit_reload_on_same_cycle                  = a load miss hits in the LMQ but the entry was
+                                                            allocated on the same cycle
+CMPL:      load_miss_congruence_class_busy                = a load misses L1 but there are too many outstanding
+                                                            misses for its congruence class
+CMPL:      load_miss_with_addr_compare_other_side_cyc     = a load miss' address matches EA bits 52-56 with
+                                                            another op in the other LSU
+CMPL:      load_miss_all_lmqs_used                        = a load miss finds all the LMQ entries used
+CMPL:      load_miss_2nd_gps_request_this_cycle_side      = a load miss tries to make a memory request but another
+                                                            op has already made a request
+CMPL:      load_miss_while_load_ntc_rejecting             = a load saw a NTC load rejecting
+CMPL: Wait_load_miss                                      = waiting on a load miss
+CMPL: Wait_load_hit_reload                                = waiting on a load miss for which this load merged in
+                                                            the LMQ with (Load Hit Reload)
+CMPL: Wait_load_for_hit_store_path                        = waiting for store forward
+CMPL: Wait_lwarx_gps_complete                             = waiting for lwarx to complete
+CMPL: Wait_stwcx_gps_complete                             = waiting for stwcx to complete
+CMPL: Wait_sync_gps_complete                              = waiting for sync to complete
+CMPL: Wait_completion_serializer                          = waiting to become next to complete (NTC)
+
+............................ pipeline_empty  ............ = this mode of counting is when no groups are in the
+                                                            system (between dispatch and completion)
+CMPL: Wait_for_ifetch                                     = waiting for ifetch (cache or translation miss)
+CMPL: Wait_for_dispatch_requirements                      = waiting for dispatch requirements to be satisfied
+CMPL: Wait_for_re_ifetch_on_branch_mis_predict            = sum of waiting for a re-ifetch after a branch 
+                                                            mispredict flush for one of these branch types
+                                                            (can include subsequent cache or translation miss)
+CMPL:    unconditional_immediate                          = unconditional immediate
+CMPL:    conditional_immediate                            = conditional immediate
+CMPL:    unconditional_link                               = unconditional link
+CMPL:    conditional_link                                 = conditional link
+CMPL:    unconditional_count                              = unconditional count
+CMPL:    conditional_count                                = conditional count
+CMPL: Wait_for_re_ifetch_on_other_flushes                 = sum of waiting for a re-ifetch after one of the
+                                                            following types of flushes
+                                                            (can include subsequent cache or translation miss)
+CMPL:    load_hit_store_same_grp_overlap_or_no_sdq        = load hit store in the same group with address not
+                                                            contained or store data was not ready
+CMPL:    load_value_mispredict                            = misaligned store flush
+CMPL:    store_hit_load_same_grp                          = store hit load in the same group
+CMPL:    store_hit_load_diff_grp                          = store hit load different group
+CMPL:    lwarx_hits_later_load_same_line                  = lwarx hits later load in the same line
+CMPL:    lwarx_hits_later_lwarx                           = lwarx hits older lwarx
+CMPL:    isync_on_context_switch                          = isync flushed due to seeing a context switch
+CMPL:    flush_misalligned_load                           = misaligned load
+
+............................ pipeline_refill ............ = this mode of counting is when there is a group waiting
+                                                            to complete but there are no stall
+                                                            reasons for the group so the delay is simply due to
+                                                            refilling the pipeline
+CMPL: No_wait_after_dispatch_grp                          = sum of the below reasons (basically the last reason
+                                                            before this group became NTC)
+CMPL:    trace_start                                      = initial startup (includes icache misses or i-translation
+                                                            misses suffered by the first group)
+CMPL:    ifetch_miss_and..                                = refilling after ifetch miss, translation miss or spr
+                                                            scorebaording
+CMPL:    br_wrong_guess_flushes                           = refilling after a mispredict branch flush
+CMPL:    all_non_branch_flushes                           = refilling after all other flushes (LSU,sync...)
+CMPL:    logjam                                           = refilling due to the decode pipe being held due to a
+                                                            dispatch hold by another group
+CMPL:    spr_reader_waits_for_writer_dispatched           = refilling due to a SPR reader who had to wait at dispatch
+                                                            for a writer to finish
+CMPL:    isync_dispatched                                 = refilling after dispatching an isync
+CMPL:    sync_dispatched                                  = refilling after dispatching a sync
+CMPL:    other_waits_at_dispatch_for_req                  = refilling due to another group being held at dispatch
+                                                            waiting for requirements
+
+CMPL: Complete_current_grp                                = every cycle in which a group completed is counted here
+CMPL: CPI----------------------------------- X  inst Y    = X = CPI and Y = number of architected instructions completed
+CMPL: Total_internal_inst                    W  time Z    = W = internal op count and Z = total number of cycles executed
+
+
+
+
+
+IBM CONFIDENTIAL - IBM CONFIDENTIAL - IBM CONFIDENTIAL - IBM CONFIDENTIAL
+
+ Completion_Unit_CPI_STACK___________________________________CPI________CYC 
+ _________________________________________________________________________
+
+............................. pipeline_contention..............................
+ CMPL: Wait_for_dispatch_requirements                      0.00000          0
+ CMPL: Wait_for_execution_unit                             0.86184        524
+ CMPL:      cr_unit/vmx_unit                                 0.00000          0
+ CMPL:      br_unit                                          0.00000          0
+ CMPL:      fpu_unit                                         0.00000          0
+ CMPL:      fxu_unit                                         0.05263         32
+ CMPL:      lsu_unit                                         0.80921        492
+ CMPL: Wait_for_sources                                    7.42928       4517
+ CMPL:      written_by_br                                    0.00000          0
+ CMPL:      written_by_cr                                    0.04112         25
+ CMPL:      written_by_fp                                    0.00000          0
+ CMPL:      written_by_fp_store                              0.00000          0
+ CMPL:      written_by_fp_load                               0.00000          0
+ CMPL:      written_by_fx                                    0.69572        423
+ CMPL:      written_by_fx_store_agen                         0.00000          0
+ CMPL:      written_by_fx_store_data                         0.00000          0
+ CMPL:      written_by_fx_load                               6.69243       4069
+ CMPL:      written_by_vmx                                   0.00000          0
+ CMPL: Wait_for_serializer_to_be_next_group                0.00000          0
+ CMPL: Wait_for_agen                                       0.04605         28
+ CMPL:      result_bus_busy_store                            0.00000          0
+ CMPL:      result_bus_busy_load                             0.01151          7
+ CMPL:      erat_dir_update_store                            0.00000          0
+ CMPL:      erat_dir_update_load                             0.01151          7
+ CMPL:      L1D_dir_update_store                             0.00000          0
+ CMPL:      L1D_dir_update_load                              0.02303         14
+ CMPL: Wait_for_translation                                6.62664       4029
+ CMPL:      erat_miss_store                                  0.00000          0
+ CMPL:      tlb_miss_store                                   0.00000          0
+ CMPL:      erat_miss_load                                   0.19408        118
+ CMPL:      tlb_miss_load                                    6.43257       3911
+ CMPL: Wait_load_rejected                                  0.10526         64
+ CMPL:      load_hit_dcbz                                    0.00000          0
+ CMPL:      load_hit_stwcx                                   0.00000          0
+ CMPL:      load_hit_lwarx                                   0.00000          0
+ CMPL:      lwarx_hit_earlier_lwarx                          0.00000          0
+ CMPL:      load_hit_store_diff_grp_contained_sdq_not_ready  0.00000          0
+ CMPL:      load_hit_store_diff_grp_overlap_not_contained    0.00000          0
+ CMPL:      load_defers_to_prefetch                          0.00000          0
+ CMPL:      store_defers_to_prefetch                         0.00000          0
+ CMPL:      load_hit_reload_lmq_full                         0.10526         64
+ CMPL:      load_hit_reload_both_from_same_side              0.00000          0
+ CMPL:      load_hit_reload_store_invalidated                0.00000          0
+ CMPL:      load_hit_reload_sector_already_came              0.00000          0
+ CMPL:      load_hit_reload_on_same_cycle                    0.00000          0
+ CMPL:      load_miss_congruence_class_busy                  0.00000          0
+ CMPL:      load_miss_with_addr_compare_other_side_cyc       0.00000          0
+ CMPL:      load_miss_all_lmqs_used                          0.00000          0
+ CMPL:      load_miss_2nd_gps_request_this_cycle_side        0.00000          0
+ CMPL:      load_miss_while_load_ntc_rejecting               0.00000          0
+ CMPL: Wait_load_miss                                      6.68421       4064
+ CMPL: Wait_load_hit_reload                                0.21875        133
+ CMPL: Wait_load_for_hit_store_path                        0.00000          0
+ CMPL: Wait_lwarx_gps_complete                             0.00000          0
+ CMPL: Wait_stwcx_gps_complete                             0.00000          0
+ CMPL: Wait_sync_gps_complete                              0.00000          0
+ CMPL: Wait_completion_serializer                          0.00000          0
+
+............................. pipeline_empty  ..............................
+ CMPL: Wait_for_ifetch                                     7.27467       4423
+ CMPL: Wait_for_dispatch_requirements                      0.00000          0
+ CMPL: Wait_for_re_ifetch_on_branch_mis_predict            2.82566       1718
+ CMPL:    unconditional_immediate                             0.00000          0
+ CMPL:    conditional_immediate                               0.84539        514
+ CMPL:    unconditional_link                                  0.51316        312
+ CMPL:    conditional_link                                    0.00000          0
+ CMPL:    unconditional_count                                 1.46711        892
+ CMPL:    conditional_count                                   0.00000          0
+ CMPL: Wait_for_re_ifetch_on_other_flushes                 0.00000          0
+ CMPL:    load_hit_store_same_grp_overlap_or_no_sdq           0.00000          0
+ CMPL:    load_value_mispredict                               0.00000          0
+ CMPL:    store_hit_load_same_grp                             0.00000          0
+ CMPL:    store_hit_load_diff_grp                             0.00000          0
+ CMPL:    lwarx_hits_later_load_same_line                     0.00000          0
+ CMPL:    lwarx_hits_later_lwarx                              0.00000          0
+ CMPL:    isync_on_context_switch                             0.00000          0
+ CMPL:    flush_misalligned_load                              0.00000          0
+
+............................. pipeline_refill ..............................
+ CMPL: No_wait_after_dispatch_grp                          0.29276        178
+ CMPL:    trace_start                                         0.00000          0
+ CMPL:    ifetch_miss_and..                                   0.12336         75
+ CMPL:    br_wrong_guess_flushes                              0.15789         96
+ CMPL:    all_non_branch_flushes                              0.00000          0
+ CMPL:    logjam                                              0.00000          0
+ CMPL:    spr_reader_waits_for_writer_dispatched              0.00000          0
+ CMPL:    isync_dispatched                                    0.00000          0
+ CMPL:    sync_dispatched                                     0.00000          0
+ CMPL:    other_waits_at_dispatch_for_req                     0.00000          0
+
+ CMPL: Complete_current_grp                                0.38158        232
+ CMPL: CPI---------------------------------------         32.74671 inst      608
+
+ CMPL: Total_internal_inst                                     753 time    19910
+
+
+
+IBM CONFIDENTIAL - IBM CONFIDENTIAL - IBM CONFIDENTIAL - IBM CONFIDENTIAL
+
+ trace ended on max inst 611 at time 21431.000000
