@@ -167,7 +167,7 @@ static fm_system* parse_files(FILE *afile, FILE *cfile)
 		++ctr_row;
 	}
 
-	free(buffer);
+//	free(buffer);
 	
 	system->rows = fm_rows;
 	system->nbr_rows = count_rows(afile);
@@ -175,16 +175,18 @@ static fm_system* parse_files(FILE *afile, FILE *cfile)
 	return system;
 }
 
-static void print_row(fm_row* row){
+static void print_poly(fm_poly* poly){
 
     unsigned int j;
 
-    fm_poly *poly_lesser  = row->lesser;
-	fm_poly *poly_greater = row->greater;
 	fm_poly_entry *poly_entry;
+    if(poly == NULL){
+        printf("NULL ");
+        return;
+    }
 
-	for(j = 0; j < poly_lesser->poly_len; ++j) {
-		poly_entry = &(poly_lesser->poly[j]);
+	for(j = 0; j < poly->poly_len; ++j) {
+		poly_entry = &(poly->poly[j]);
 
         if(poly_entry->numerator == 0){
 //            continue;
@@ -209,39 +211,16 @@ static void print_row(fm_row* row){
 		}
 	}
 
+}
+
+static void print_row(fm_row* row){
+	print_poly(row->lesser);
 	printf("<= ");
-
-	for(j = 0; j < poly_greater->poly_len; ++j) {
-		poly_entry = &(poly_greater->poly[j]);
-		
-		if(poly_entry->numerator == 0){
-//            continue;
-        }
-		
-		if(poly_entry->denominator != 1){
-		    if(poly_entry->numerator > 0 && poly_entry->denominator > 0 && j != 0){
-                printf("+ ");
-            }
-		    printf("(%lld/%lld)", poly_entry->numerator, poly_entry->denominator);
-        } else {
-            if(poly_entry->numerator > 0 && j != 0){
-                printf("+ ");
-            }
-            printf("%lld", poly_entry->numerator);
-        }
-		if(poly_entry->index > 0) {
-			printf("x_{%llu} ", poly_entry->index);
-		} else {
-			printf(" ");
-		}
-	}
-
+	print_poly(row->greater);
 	printf("\n");
 }
 
-static void
-print_system(fm_system* system)
-{
+static void print_system(fm_system* system){
 	unsigned int i;
 
 	for(i = 0; i < system->nbr_rows; ++i) {
@@ -251,9 +230,7 @@ print_system(fm_system* system)
 
 
 // TODO: Also free resources
-static void
-done(int unused)
-{
+static void done(int unused){
 	proceed = false;
 	unused = unused;
 }
@@ -269,7 +246,7 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
     
     nbr_pos = nbr_neg = nbr_zero = 0;
     unsigned int nbr_rows = system->nbr_rows;
-    unsigned int nbr_x = system->nbr_x;
+    unsigned int nbr_x = system->curr_nbr_x;
 	fm_row *pos_rows = (fm_row*) malloc(sizeof(fm_row)*nbr_rows);
 	fm_row *neg_rows = (fm_row*) malloc(sizeof(fm_row)*nbr_rows);
 	fm_row *zero_rows = (fm_row*) malloc(sizeof(fm_row)*nbr_rows);
@@ -320,13 +297,146 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
     
     printf("sorted on x_{%d}?\n", nbr_x);
     print_system(system);
-    unsigned int *ret = malloc(sizeof(unsigned int)*2);
+    unsigned int *ret = malloc(sizeof(unsigned int)*3);
     ret[0] = nbr_pos;
     ret[1] = nbr_neg;
+    ret[2] = nbr_zero;
     return ret;
 }
 
+int elim_2(fm_system* system){
+    
+    unsigned int i, j;
+
+    //Sort
+    unsigned int* ns = sort_by_coeffs(system);
+    unsigned int n_pos = ns[0];
+    unsigned int n_neg = ns[1];
+    unsigned int n_zero = ns[2];
+    unsigned int n_non_zero = n_pos + n_neg;
+    
+    fm_poly *tmp_poly;
+    fm_poly_entry tmp_poly_entry;
+    
+    //Divide
+    for(i = 0; i < n_pos + n_neg; ++i){
+        tmp_poly = system->rows[i].lesser;
+        tmp_poly_entry = tmp_poly->poly[tmp_poly->poly_len - 1];
+        
+        for(j = 0; j < tmp_poly->poly_len; ++j){
+            tmp_poly->poly[j].numerator = tmp_poly->poly[j].numerator * tmp_poly_entry.denominator;
+            tmp_poly->poly[j].denominator = tmp_poly->poly[j].denominator * tmp_poly_entry.numerator;
+        }
+        
+        system->rows[i].greater->poly[0].numerator = system->rows[i].greater->poly[0].numerator * tmp_poly_entry.denominator;
+        system->rows[i].greater->poly[0].denominator = system->rows[i].greater->poly[0].denominator * tmp_poly_entry.numerator;
+        
+        if((tmp_poly_entry.numerator < 0 && tmp_poly_entry.denominator > 0) || (tmp_poly_entry.numerator > 0 && tmp_poly_entry.denominator < 0)){
+            system->rows[i].lesser = system->rows[i].greater;
+            system->rows[i].greater = tmp_poly;
+        }
+    }
+    printf("\nDivide:\n");print_system(system);
+    
+    //Isolate
+    fm_row *new_rows = (fm_row*) malloc(sizeof(fm_row)*n_non_zero);
+    fm_poly *new_poly = (fm_poly*) malloc(sizeof(fm_poly)*n_non_zero);
+    fm_poly_entry *new_entries = (fm_poly_entry*) malloc(sizeof(fm_poly_entry)*system->nbr_rows*system->curr_nbr_x);
+    fm_poly *curr_poly;
+    printf("\nIsolate:\n");
+    for(i = 0; i < n_non_zero; ++i){
+    
+        curr_poly = &(new_poly[i]);
+        curr_poly->poly_len = system->curr_nbr_x;
+        curr_poly->poly = &(new_entries[i*curr_poly->poly_len]);
+        
+        if(system->rows[i].lesser->poly_len == 1 && system->rows[i].lesser->poly[0].index == 0){ //if lesser == const side
+           
+            for(j=0; j < system->curr_nbr_x-1; ++j){
+                curr_poly->poly[j].numerator = -system->rows[i].greater->poly[j].numerator;
+                curr_poly->poly[j].denominator = system->rows[i].greater->poly[j].denominator;
+                curr_poly->poly[j].index = system->rows[i].greater->poly[j].index;
+            }
+            curr_poly->poly[j].numerator = system->rows[i].lesser->poly[0].numerator;
+            curr_poly->poly[j].denominator = system->rows[i].lesser->poly[0].denominator;
+            curr_poly->poly[j].index = system->rows[i].lesser->poly[0].index;
+            
+            new_rows[i].greater = NULL;
+            new_rows[i].lesser = curr_poly;
+            
+        } else {    
+                
+            for(j=0; j < system->curr_nbr_x-1; ++j){
+                curr_poly->poly[j].numerator = -system->rows[i].lesser->poly[j].numerator;
+                curr_poly->poly[j].denominator = system->rows[i].lesser->poly[j].denominator;
+                curr_poly->poly[j].index = system->rows[i].lesser->poly[j].index;
+            }
+            curr_poly->poly[j].numerator = system->rows[i].greater->poly[0].numerator;
+            curr_poly->poly[j].denominator = system->rows[i].greater->poly[0].denominator;
+            curr_poly->poly[j].index = system->rows[i].greater->poly[0].index;
+            
+            new_rows[i].lesser = NULL;
+            new_rows[i].greater = curr_poly;
+        }
+        print_row(&(new_rows[i]));
+    }
+    
+    //B's
+    fm_poly *b1 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
+    fm_poly *b2 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
+    unsigned int n_b1 = 0;
+    unsigned int n_b2 = 0;
+    for(i = 0; i < n_non_zero; ++i){
+        if(new_rows[i].lesser == NULL){
+            b2[n_b2++] = *(new_rows[i].greater);
+        } else {
+            b1[n_b1++] = *(new_rows[i].lesser);
+        }
+    }
+    printf("\nCreate b1:\n");
+    for(i = 0; i<n_b1;++i) {print_poly(&(b1[i])); printf("\n");}
+    printf("Create b2:\n");
+    for(i = 0; i<n_b2;++i) {print_poly(&(b2[i])); printf("\n");}
+    printf("#b1: %u\t #b2: %u\n", n_b1, n_b2);
+    
+    //Merge b's
+    printf("\nMerge b*:\n");
+    fm_row *b_rows = (fm_row*) malloc(sizeof(fm_row)*(n_b1*n_b2+n_zero)+1024);
+    for(i = 0; i < n_b1; ++i){
+        for(j = 0; j < n_b2; ++j){
+            b_rows[i*n_b1+j].lesser = &(b1[i]);
+            b_rows[i*n_b1+j].greater = &(b2[j]);
+        }
+    }
+    for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
+
+    //Add rows with 0 coeff
+    printf("\nAdd zero-coeff rows:\n");
+    i = n_b1*n_b2;
+    for(j = n_pos + n_neg; j < system->nbr_rows; ++j){
+        printf("system->rows[%u]: ", j); print_row(&(system->rows[j]));
+        b_rows[i] = system->rows[j];
+        printf("b_rows[%u]: ", i); print_row(&(b_rows[i]));
+        i++;
+        print_poly(b_rows[i].lesser);
+        b_rows[i].lesser->poly_len = system->curr_nbr_x-1;
+    }
+    for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));
+    
+    //Simplify
+    printf("\nSimplify:\n");
+        
+    /*
+
+    */
+    
+    printf("elim_2 done\n");
+    return 7;
+    
+}
+
 int f_m_elim(fm_system* system){
+    return 5;
     unsigned int r = system->nbr_rows;
     unsigned int s = system->curr_nbr_x;
     unsigned int s2;
@@ -380,39 +490,43 @@ printf("system->curr_nbr_x: %u\n", system->curr_nbr_x);
             entry.numerator = entry.numerator * t[r + j].denominator;
             entry.denominator = entry.denominator * t[r + j].numerator;
         }
+        printf("B1:\n");
         if(n2 > n1){
             int c = 0;
             b1 = (fm_poly*)malloc(sizeof(fm_poly)*(n2 - (n1)));
-            b1->poly_len = 0;
-            fm_poly_entry* tmp = malloc(sizeof(fm_poly_entry)*(r+1));
+            //b1->poly_len = 0;
             for(j = n1; j < n2; ++j){
+                fm_poly_entry* tmp = malloc(sizeof(fm_poly_entry)*(r+1));
                 for(i = 0; i < r - 1; ++i){
                     tmp[i] = t[i + j]; //TODO: neg?
                 }
                 tmp[i+1] = q[j];
-                b1[c].poly_len++;
+                b1[c].poly_len = r - 1;
                 b1[c].poly = tmp;
                 c++;
             }
-            free(tmp);
+            print_poly(&(b1[c]));
+            //free(tmp);
         }else{
             b1 = NULL;
         }
+        
+        printf("B2:\n");
         if(n1 > 0){
             int c = 0;
             b2 = (fm_poly*)malloc(sizeof(fm_poly)*(n1));
-            b2->poly_len = 0;
-			fm_poly_entry* tmp = malloc(sizeof(fm_poly_entry)*(r+1));
+            //b2->poly_len = 0;
             for(j = 0; j < n1; ++j){
+			    fm_poly_entry* tmp = malloc(sizeof(fm_poly_entry)*(r+1));
                 for(i = 0; i < r - 1; ++i){
                     tmp[i] = t[i + j]; //TODO: neg?
                 }
                 tmp[i+1] = q[j];
-                b2[c].poly_len++;
+                b2[c].poly_len = r - 1;
                 b2[c].poly = tmp;
                 c++;
             }
-            free(tmp);
+            print_poly(&(b2[c]));
         }else{
             b2 = NULL;
         }
@@ -437,47 +551,75 @@ printf("system->curr_nbr_x: %u\n", system->curr_nbr_x);
         r--;
         s = s2;
         
-        b_combined_rows = (fm_row*) malloc(sizeof(fm_row)*n1*(n2-n1)); //TODO: wutwutwut
+        //fm_row *b_combined_rows = (fm_row*) malloc(sizeof(fm_row)*n1*(n2-n1)); //TODO: wutwutwut
+        fm_row *b_combined_rows = (fm_row*) malloc(sizeof(fm_row)*s);
         
-        fm_poly p1, p2, l, g;
-        int k;
+        fm_poly l, g;
+        unsigned int k, row_count;
+        row_count = 0;
+        
+        fm_row *tmp_test_row = (fm_row*) malloc(sizeof(fm_row));
         
         for(i = 0; i < (n2-n1); ++i){
             for(j = 0; j < n1; ++j){
                 
                 l = b1[i];
                 g = b2[j];
+                
+                tmp_test_row->lesser = &l;
+                tmp_test_row->greater = &g;
+                printf("tem test? ");
+                print_row(tmp_test_row);
 
                 fm_poly *poly = (fm_poly*) malloc(sizeof(fm_poly));
                 fm_poly_entry *entries = (fm_poly_entry*) malloc(sizeof(fm_poly_entry)*(l.poly_len-1));
                 
-                for(k = 0; k < l.poly_len - 1; ++k){
+                for(k = 0; k < l.poly_len - 2; ++k){
                         
-                    fm_poly_entry pe_l = l[k];
-                    fm_poly_entry pe_g = g[k];
+                    fm_poly_entry pe_l = l.poly[k];
+                    fm_poly_entry pe_g = g.poly[k];
                     
                     fm_poly_entry *tmp_entry = &(entries[k]);
-                    tmp_entry->numerator = pe_l->numerator * pe_g->denominator - pe_g->numerator * pe_l->denominator;
-                    tmp_entry->denominator = pe_l->denominator * pe_g->denominator;
-                    tmp_entry->index = pe_g->index;
+                    tmp_entry->numerator = pe_l.numerator * pe_g.denominator - pe_g.numerator * pe_l.denominator;
+                    tmp_entry->denominator = pe_l.denominator * pe_g.denominator;
+                    tmp_entry->index = pe_g.index;
                         
                 }
                 poly->poly = entries;
                 poly->poly_len = k;
-                b_combined_rows->lesser = poly;
-                fm_poly_entry pe_l = l[k];
-                fm_poly_entry pe_g = g[k];
+                b_combined_rows[row_count].lesser = poly;
+                fm_poly_entry pe_l = l.poly[k];
+                fm_poly_entry pe_g = g.poly[k];
                 
                 poly = (fm_poly*) malloc(sizeof(fm_poly));
                 poly->poly = (fm_poly_entry*) malloc(sizeof(fm_poly_entry));
                 poly->poly_len = 1;
-                b_combined_rows->greater = poly;
-                poly->poly[0].numerator = pe_l->numerator * pe_g->denominator - pe_g->numerator * pe_l->denominator;
-                poly->poly[0].denominator = pe_l->denominator * pe_g->denominator;
-                poly->poly[0].index = pe_g->index;
+                b_combined_rows[row_count].greater = poly;
+                poly->poly[0].numerator = pe_l.numerator * pe_g.denominator - pe_g.numerator * pe_l.denominator;
+                poly->poly[0].denominator = pe_l.denominator * pe_g.denominator;
+                poly->poly[0].index = pe_g.index;
+                
+                printf("comb rows \n");
+                print_row(b_combined_rows);
+                
+                row_count++;
                 
             }
+            
+            for(i = n2; i < s; ++i){
+                b_combined_rows[row_count].lesser = system->rows[i].lesser;
+                b_combined_rows[row_count].greater = system->rows[i].greater;
+                
+                print_row(b_combined_rows);
+                
+                row_count++;
+            }
+            
         }
+        
+        system->rows = b_combined_rows;
+        printf("Changed system?!?!?!?\n");
+        print_system(system);
         
         
 /*
@@ -664,6 +806,7 @@ dt08rf1(char* aname, char* cname, int seconds)
 
     //TODO: move
     f_m_elim(system);
+    elim_2(system);
 
 	if (seconds == 0) {
 		/* Just run once for validation. */
