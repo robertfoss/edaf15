@@ -13,7 +13,7 @@ if((unsigned int)accessed_element >= (unsigned int)allocated_elements){\
 };
 
 static unsigned long long	fm_count;
-static volatile bool		proceed = false;
+static volatile bool			proceed = false;
 
 typedef struct {
 	long long numerator;
@@ -189,7 +189,7 @@ static void print_poly(fm_poly* poly){
 		poly_entry = &(poly->poly[j]);
 
         if(poly_entry->numerator == 0){
-//            continue;
+            continue;
         }
 
         if(poly_entry->denominator != 1){
@@ -401,7 +401,7 @@ int elim_2(fm_system* system){
     
     //Merge b's
     printf("\nMerge b*:\n");
-    fm_row *b_rows = (fm_row*) malloc(sizeof(fm_row)*(n_b1*n_b2+n_zero)+1024);
+    fm_row *b_rows = (fm_row*) malloc(sizeof(fm_row)*(n_b1*n_b2+n_zero));
     for(i = 0; i < n_b1; ++i){
         for(j = 0; j < n_b2; ++j){
             b_rows[i*n_b1+j].lesser = &(b1[i]);
@@ -414,22 +414,41 @@ int elim_2(fm_system* system){
     printf("\nAdd zero-coeff rows:\n");
     i = n_b1*n_b2;
     for(j = n_pos + n_neg; j < system->nbr_rows; ++j){
-        printf("system->rows[%u]: ", j); print_row(&(system->rows[j]));
         b_rows[i] = system->rows[j];
-        printf("b_rows[%u]: ", i); print_row(&(b_rows[i]));
-        i++;
-        print_poly(b_rows[i].lesser);
         b_rows[i].lesser->poly_len = system->curr_nbr_x-1;
+		++i;
     }
     for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));
     
     //Simplify
     printf("\nSimplify:\n");
-        
-    /*
+	fm_poly_entry *great_e, *less_e;
+    for(i = 0; i < n_b1*n_b2+n_zero; ++i){
+		//Move non-constants to lesser side
+		for(j = 0; j < b_rows[i].greater->poly_len-1; ++j){
+			great_e = &(b_rows[i].greater->poly[j]);
+			less_e = &(b_rows[i].lesser->poly[j]);
+			printf("(%lld/%lld) - (%lld/%lld) = ", less_e->numerator, less_e->denominator, great_e->numerator, great_e->denominator);
+			less_e->numerator =  less_e->numerator*great_e->denominator - great_e->numerator*less_e->denominator;
+			less_e->denominator = less_e->denominator*great_e->denominator;
+			printf("(%lld/%lld)\n\n", less_e->numerator, less_e->denominator);
 
-    */
-    
+			great_e->numerator = 0;
+			great_e->denominator = 1;
+		}
+	}
+
+for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));
+    for(i = 0; i < n_b1*n_b2+n_zero; ++i){
+		//Move constants to greater side
+		great_e = &(b_rows[i].greater->poly[b_rows[i].greater->poly_len-1]);
+		less_e = &(b_rows[i].lesser->poly[b_rows[i].greater->poly_len-1]);
+
+		great_e->numerator = great_e->numerator*less_e->denominator - less_e->numerator*great_e->denominator;
+		great_e->denominator = great_e->denominator*less_e->denominator;
+	}
+    for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));    
+
     printf("elim_2 done\n");
     return 7;
     
