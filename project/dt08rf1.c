@@ -189,7 +189,7 @@ static void print_poly(fm_poly* poly){
 		poly_entry = &(poly->poly[j]);
 
         if(poly_entry->numerator == 0){
-            continue;
+            //continue;
         }
 
         if(poly_entry->denominator != 1){
@@ -301,155 +301,174 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
     ret[0] = nbr_pos;
     ret[1] = nbr_neg;
     ret[2] = nbr_zero;
-    return ret;
+    return ret;;
+}
+
+fm_poly* copy_poly(fm_poly* poly){
+	fm_poly *tmp = malloc(sizeof(fm_poly));
+	fm_poly_entry *tmp_entries = malloc(sizeof(fm_poly_entry)*poly->poly_len);
+	tmp->poly_len = poly->poly_len;
+	tmp->poly = tmp_entries;
+
+	memcpy(tmp_entries, poly->poly, sizeof(fm_poly_entry)*poly->poly_len);
+//printf("orig poly: "); print_poly(poly);
+//printf("copy poly: "); print_poly(tmp);
+	return tmp;
 }
 
 int elim_2(fm_system* system){
     
     unsigned int i, j;
 
-    //Sort
-    unsigned int* ns = sort_by_coeffs(system);
-    unsigned int n_pos = ns[0];
-    unsigned int n_neg = ns[1];
-    unsigned int n_zero = ns[2];
-    unsigned int n_non_zero = n_pos + n_neg;
-    
-    fm_poly *tmp_poly;
-    fm_poly_entry tmp_poly_entry;
-    
-    //Divide
-    for(i = 0; i < n_pos + n_neg; ++i){
-        tmp_poly = system->rows[i].lesser;
-        tmp_poly_entry = tmp_poly->poly[tmp_poly->poly_len - 1];
-        
-        for(j = 0; j < tmp_poly->poly_len; ++j){
-            tmp_poly->poly[j].numerator = tmp_poly->poly[j].numerator * tmp_poly_entry.denominator;
-            tmp_poly->poly[j].denominator = tmp_poly->poly[j].denominator * tmp_poly_entry.numerator;
-        }
-        
-        system->rows[i].greater->poly[0].numerator = system->rows[i].greater->poly[0].numerator * tmp_poly_entry.denominator;
-        system->rows[i].greater->poly[0].denominator = system->rows[i].greater->poly[0].denominator * tmp_poly_entry.numerator;
-        
-        if((tmp_poly_entry.numerator < 0 && tmp_poly_entry.denominator > 0) || (tmp_poly_entry.numerator > 0 && tmp_poly_entry.denominator < 0)){
-            system->rows[i].lesser = system->rows[i].greater;
-            system->rows[i].greater = tmp_poly;
-        }
-    }
-    printf("\nDivide:\n");print_system(system);
-    
-    //Isolate
-    fm_row *new_rows = (fm_row*) malloc(sizeof(fm_row)*n_non_zero);
-    fm_poly *new_poly = (fm_poly*) malloc(sizeof(fm_poly)*n_non_zero);
-    fm_poly_entry *new_entries = (fm_poly_entry*) malloc(sizeof(fm_poly_entry)*system->nbr_rows*system->curr_nbr_x);
-    fm_poly *curr_poly;
-    printf("\nIsolate:\n");
-    for(i = 0; i < n_non_zero; ++i){
-    
-        curr_poly = &(new_poly[i]);
-        curr_poly->poly_len = system->curr_nbr_x;
-        curr_poly->poly = &(new_entries[i*curr_poly->poly_len]);
-        
-        if(system->rows[i].lesser->poly_len == 1 && system->rows[i].lesser->poly[0].index == 0){ //if lesser == const side
-           
-            for(j=0; j < system->curr_nbr_x-1; ++j){
-                curr_poly->poly[j].numerator = -system->rows[i].greater->poly[j].numerator;
-                curr_poly->poly[j].denominator = system->rows[i].greater->poly[j].denominator;
-                curr_poly->poly[j].index = system->rows[i].greater->poly[j].index;
-            }
-            curr_poly->poly[j].numerator = system->rows[i].lesser->poly[0].numerator;
-            curr_poly->poly[j].denominator = system->rows[i].lesser->poly[0].denominator;
-            curr_poly->poly[j].index = system->rows[i].lesser->poly[0].index;
-            
-            new_rows[i].greater = NULL;
-            new_rows[i].lesser = curr_poly;
-            
-        } else {    
-                
-            for(j=0; j < system->curr_nbr_x-1; ++j){
-                curr_poly->poly[j].numerator = -system->rows[i].lesser->poly[j].numerator;
-                curr_poly->poly[j].denominator = system->rows[i].lesser->poly[j].denominator;
-                curr_poly->poly[j].index = system->rows[i].lesser->poly[j].index;
-            }
-            curr_poly->poly[j].numerator = system->rows[i].greater->poly[0].numerator;
-            curr_poly->poly[j].denominator = system->rows[i].greater->poly[0].denominator;
-            curr_poly->poly[j].index = system->rows[i].greater->poly[0].index;
-            
-            new_rows[i].lesser = NULL;
-            new_rows[i].greater = curr_poly;
-        }
-        print_row(&(new_rows[i]));
-    }
-    
-    //B's
-    fm_poly *b1 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
-    fm_poly *b2 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
-    unsigned int n_b1 = 0;
-    unsigned int n_b2 = 0;
-    for(i = 0; i < n_non_zero; ++i){
-        if(new_rows[i].lesser == NULL){
-            b2[n_b2++] = *(new_rows[i].greater);
-        } else {
-            b1[n_b1++] = *(new_rows[i].lesser);
-        }
-    }
-    printf("\nCreate b1:\n");
-    for(i = 0; i<n_b1;++i) {print_poly(&(b1[i])); printf("\n");}
-    printf("Create b2:\n");
-    for(i = 0; i<n_b2;++i) {print_poly(&(b2[i])); printf("\n");}
-    printf("#b1: %u\t #b2: %u\n", n_b1, n_b2);
-    
-    //Merge b's
-    printf("\nMerge b*:\n");
-    fm_row *b_rows = (fm_row*) malloc(sizeof(fm_row)*(n_b1*n_b2+n_zero));
-    for(i = 0; i < n_b1; ++i){
-        for(j = 0; j < n_b2; ++j){
-            b_rows[i*n_b1+j].lesser = &(b1[i]);
-            b_rows[i*n_b1+j].greater = &(b2[j]);
-        }
-    }
-    for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
+	while(system->curr_nbr_x > 0){
 
-    //Add rows with 0 coeff
-    printf("\nAdd zero-coeff rows:\n");
-    i = n_b1*n_b2;
-    for(j = n_pos + n_neg; j < system->nbr_rows; ++j){
-        b_rows[i] = system->rows[j];
-        b_rows[i].lesser->poly_len = system->curr_nbr_x-1;
-		++i;
-    }
-    for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));
-    
-    //Simplify
-    printf("\nSimplify:\n");
-	fm_poly_entry *great_e, *less_e;
-    for(i = 0; i < n_b1*n_b2+n_zero; ++i){
-		//Move non-constants to lesser side
-		for(j = 0; j < b_rows[i].greater->poly_len-1; ++j){
-			great_e = &(b_rows[i].greater->poly[j]);
-			less_e = &(b_rows[i].lesser->poly[j]);
-			printf("(%lld/%lld) - (%lld/%lld) = ", less_e->numerator, less_e->denominator, great_e->numerator, great_e->denominator);
-			less_e->numerator =  less_e->numerator*great_e->denominator - great_e->numerator*less_e->denominator;
-			less_e->denominator = less_e->denominator*great_e->denominator;
-			printf("(%lld/%lld)\n\n", less_e->numerator, less_e->denominator);
+printf("system:\n");print_system(system);
 
-			great_e->numerator = 0;
-			great_e->denominator = 1;
+		//Sort
+		unsigned int* ns = sort_by_coeffs(system);
+		unsigned int n_pos = ns[0];
+		unsigned int n_neg = ns[1];
+		unsigned int n_zero = ns[2];
+		unsigned int n_non_zero = n_pos + n_neg;
+		
+		fm_poly *tmp_poly;
+		fm_poly_entry tmp_poly_entry;
+		
+		//Divide
+		for(i = 0; i < n_pos + n_neg; ++i){
+		    tmp_poly = system->rows[i].lesser;
+		    tmp_poly_entry = tmp_poly->poly[tmp_poly->poly_len - 1];
+		    
+		    for(j = 0; j < tmp_poly->poly_len; ++j){
+		        tmp_poly->poly[j].numerator = tmp_poly->poly[j].numerator * tmp_poly_entry.denominator;
+		        tmp_poly->poly[j].denominator = tmp_poly->poly[j].denominator * tmp_poly_entry.numerator;
+		    }
+		    
+		    system->rows[i].greater->poly[0].numerator = system->rows[i].greater->poly[0].numerator * tmp_poly_entry.denominator;
+		    system->rows[i].greater->poly[0].denominator = system->rows[i].greater->poly[0].denominator * tmp_poly_entry.numerator;
+		    
+		    if((tmp_poly_entry.numerator < 0 && tmp_poly_entry.denominator > 0) || (tmp_poly_entry.numerator > 0 && tmp_poly_entry.denominator < 0)){
+		        system->rows[i].lesser = system->rows[i].greater;
+		        system->rows[i].greater = tmp_poly;
+		    }
 		}
+		printf("\nDivide:\n");print_system(system);
+		
+		//Isolate
+		fm_row *new_rows = (fm_row*) malloc(sizeof(fm_row)*n_non_zero);
+		fm_poly *new_poly = (fm_poly*) malloc(sizeof(fm_poly)*n_non_zero);
+		fm_poly_entry *new_entries = (fm_poly_entry*) malloc(sizeof(fm_poly_entry)*system->nbr_rows*system->curr_nbr_x);
+		fm_poly *curr_poly;
+		printf("\nIsolate:\n");
+		for(i = 0; i < n_non_zero; ++i){
+		
+		    curr_poly = &(new_poly[i]);
+		    curr_poly->poly_len = system->curr_nbr_x;
+		    curr_poly->poly = &(new_entries[i*curr_poly->poly_len]);
+		    
+		    if(system->rows[i].lesser->poly_len == 1 && system->rows[i].lesser->poly[0].index == 0){ //if lesser == const side
+		       
+		        for(j=0; j < system->curr_nbr_x-1; ++j){
+		            curr_poly->poly[j].numerator = -system->rows[i].greater->poly[j].numerator;
+		            curr_poly->poly[j].denominator = system->rows[i].greater->poly[j].denominator;
+		            curr_poly->poly[j].index = system->rows[i].greater->poly[j].index;
+		        }
+		        curr_poly->poly[j].numerator = system->rows[i].lesser->poly[0].numerator;
+		        curr_poly->poly[j].denominator = system->rows[i].lesser->poly[0].denominator;
+		        curr_poly->poly[j].index = system->rows[i].lesser->poly[0].index;
+		        
+		        new_rows[i].greater = NULL;
+		        new_rows[i].lesser = curr_poly;
+		        
+		    } else {    
+		            
+		        for(j=0; j < system->curr_nbr_x-1; ++j){
+		            curr_poly->poly[j].numerator = -system->rows[i].lesser->poly[j].numerator;
+		            curr_poly->poly[j].denominator = system->rows[i].lesser->poly[j].denominator;
+		            curr_poly->poly[j].index = system->rows[i].lesser->poly[j].index;
+		        }
+		        curr_poly->poly[j].numerator = system->rows[i].greater->poly[0].numerator;
+		        curr_poly->poly[j].denominator = system->rows[i].greater->poly[0].denominator;
+		        curr_poly->poly[j].index = system->rows[i].greater->poly[0].index;
+		        
+		        new_rows[i].lesser = NULL;
+		        new_rows[i].greater = curr_poly;
+		    }
+		    print_row(&(new_rows[i]));
+		}
+		
+		//B's
+		fm_poly *b1 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
+		fm_poly *b2 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
+		unsigned int n_b1 = 0;
+		unsigned int n_b2 = 0;
+		for(i = 0; i < n_non_zero; ++i){
+		    if(new_rows[i].lesser == NULL){
+		        b2[n_b2++] = *(new_rows[i].greater);
+		    } else {
+		        b1[n_b1++] = *(new_rows[i].lesser);
+		    }
+		}
+		printf("\nCreate b1:\n");
+		for(i = 0; i<n_b1;++i) {print_poly(&(b1[i])); printf("\n");}
+		printf("Create b2:\n");
+		for(i = 0; i<n_b2;++i) {print_poly(&(b2[i])); printf("\n");}
+		printf("#b1: %u\t #b2: %u\n", n_b1, n_b2);
+		
+		//Merge b's
+		printf("\nMerge b*:\n");
+		fm_row *b_rows = (fm_row*) malloc(sizeof(fm_row)*(n_b1*n_b2+n_zero));
+		for(i = 0; i < n_b1; ++i){
+		    for(j = 0; j < n_b2; ++j){
+		        b_rows[i*n_b1+j].lesser = copy_poly(&(b1[i]));
+		        b_rows[i*n_b1+j].greater = copy_poly(&(b2[j]));
+		    }
+		}
+	//	free(b1); TODO:
+	//	free(b2); TODO:
+		for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
+
+		//Simplify
+		printf("\nSimplify:\n");
+		fm_poly_entry *great_e, *less_e;
+		for(i = 0; i < n_b1*n_b2; ++i){
+			//Move non-constants to lesser side
+			for(j = 0; j < b_rows[i].greater->poly_len-1; ++j){
+				great_e = &(b_rows[i].greater->poly[j]);
+				less_e = &(b_rows[i].lesser->poly[j]);
+				less_e->numerator =  less_e->numerator*great_e->denominator - great_e->numerator*less_e->denominator;
+				less_e->denominator = less_e->denominator*great_e->denominator;
+
+				great_e->numerator = 0;
+				great_e->denominator = 1;
+			}
+			great_e = &(b_rows[i].greater->poly[b_rows[i].greater->poly_len-1]);
+			less_e = &(b_rows[i].lesser->poly[b_rows[i].greater->poly_len-1]);
+
+			//Move constants to greater side
+			great_e->numerator = great_e->numerator*less_e->denominator - less_e->numerator*great_e->denominator;
+			great_e->denominator = great_e->denominator*less_e->denominator;
+			less_e->numerator = 0;
+			less_e->denominator = 1;
+		}
+		for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
+	 
+
+		//Add rows with 0 coeff
+		printf("\nAdd zero-coeff rows:\n");
+		i = n_b1*n_b2;
+		for(j = n_pos + n_neg; j < system->nbr_rows; ++j){
+		    b_rows[i] = system->rows[j];
+		    b_rows[i].lesser->poly_len = system->curr_nbr_x-1;
+			++i;
+		}
+		for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));
+		
+		printf("elim_2 done\n");
+		system->curr_nbr_x = system->curr_nbr_x - 1;
+printf("curr nbr x = %d\n", system->curr_nbr_x);
+		//COPY ALL NON-ZERO COEFF ENTRIES FROM TO SYSTEM FROM b_row
 	}
-
-for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));
-    for(i = 0; i < n_b1*n_b2+n_zero; ++i){
-		//Move constants to greater side
-		great_e = &(b_rows[i].greater->poly[b_rows[i].greater->poly_len-1]);
-		less_e = &(b_rows[i].lesser->poly[b_rows[i].greater->poly_len-1]);
-
-		great_e->numerator = great_e->numerator*less_e->denominator - less_e->numerator*great_e->denominator;
-		great_e->denominator = great_e->denominator*less_e->denominator;
-	}
-    for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));    
-
-    printf("elim_2 done\n");
     return 7;
     
 }
