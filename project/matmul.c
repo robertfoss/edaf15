@@ -24,7 +24,7 @@ void matmul()
 	size_t	i, j, k;
 	memset(a, 0, N*N);
 	for (i = 0; i < N; i += 1) {
-			for (k = 0; k < N; k += 1) {
+		for (k = 0; k < N; k += 1) {
 			for (j = 0; j < N; j += 1) {
 				a[i][j] += b[i][k] * c[k][j];
 			}
