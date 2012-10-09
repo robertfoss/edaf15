@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <limits.h>
+#include <float.h>
 
 #define CHK_BOUND(name, accessed_element, allocated_elements) { \
 if((unsigned int)accessed_element >= (unsigned int)allocated_elements){\
@@ -90,6 +91,8 @@ count_cols(FILE *fp)
 	return cols;
 }
 
+static void print_row(fm_row* row);
+
 
 static fm_system* parse_files(FILE *afile, FILE *cfile)
 {
@@ -133,9 +136,9 @@ static fm_system* parse_files(FILE *afile, FILE *cfile)
 	unsigned int ctr_row = 0;
 
 	for (line_tok = strtok_r(buffer+4*sizeof(char), "\n", &line_save); line_tok; line_tok = strtok_r(NULL, "\n", &line_save)) {
-		//printf("line=%s\n", line_tok);
+printf("line=%s\n", line_tok);
 		for (integer_tok = strtok_r(line_tok, " \t", &integer_save); integer_tok; integer_tok = strtok_r(NULL, " \t", &integer_save)) {
-				//printf("integer=%s\n", integer_tok);
+printf("integer=%s\n", integer_tok);
 				sscanf(integer_tok, "%lld", &read_integer);
 
 				fm_rows[ctr_row].lesser->poly[ctr_col].numerator = read_integer;
@@ -235,9 +238,22 @@ static void done(int unused){
 	unused = unused;
 }
 
+static int is_const(fm_poly* poly){
+	if(poly == NULL){
+		return 0;
+	}
+	unsigned int i;
+	for(i = 0; i < poly->poly_len; i++){
+		if(poly->poly[i].numerator != 0 && poly->poly[i].index != 0){
+			return 0;
+		}
+	}
+	return 1;
+}
+
 static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by coeffs of largest x-index
 
-    unsigned int i;
+    unsigned int i, j;
     fm_row row;
     fm_poly *poly_lesser, *poly_greater, *poly;
     fm_poly_entry sort_entry;
@@ -255,21 +271,35 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
         row = system->rows[i];
         poly_lesser = row.lesser;
         poly_greater = row.greater;
-        
-        if(poly_lesser->poly_len == 1 && poly_lesser->poly[0].index == 0){ //lesser == const side
+        if(is_const(poly_lesser)){ //lesser == const side
             poly = poly_greater;
-        } else if(poly_greater->poly_len == 1 && poly_greater->poly[0].index == 0){ //greater == const side
+        } else if(is_const(poly_greater)){ //greater == const side
             poly = poly_lesser;
-        } else { //TODO: is this possible?
-            printf("no const side in row: ");
-            print_row(&row);
-            exit(1);
+        } else {
+			// The case of two sides being const. Hopefully
+			if(poly_greater != NULL || poly_lesser != NULL)
+				printf("Error: No side are const, but both aren't NULL.");
+			continue;
+
         }
-        
-        sort_entry = poly->poly[poly->poly_len-1]; //largest x-index term in row
+printf("sort poly (%u): ", nbr_x);print_poly(poly);printf("\n");
+		
+        sort_entry = poly->poly[nbr_x-1]; //largest x-index term in row
+		if(sort_entry.index != (nbr_x)){
+			for(j = 0; j < poly->poly_len; ++j){
+				if(poly->poly[j].index == (nbr_x)){
+					sort_entry = poly->poly[j]; //largest x-index term in row
+				}
+			}
+		}
+printf("sort_entry = (%lld/%lld)x_%llu\n", sort_entry.numerator, sort_entry.denominator, sort_entry.index);
+
+
+//printf("\tsort_entry = (%lld/%lld)x_{%llu}\n", sort_entry.numerator, sort_entry.denominator, sort_entry.index);
         
         if(sort_entry.index != nbr_x || sort_entry.numerator == 0){ //coeff == 0
             zero_rows[nbr_zero++] = row;
+//printf("zero: "); print_row(&row);
             continue;
         }
         
@@ -277,8 +307,10 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
         denominator = sort_entry. denominator;
         
         if((numerator > 0 && denominator > 0) || (numerator < 0 && denominator < 0)){ // coeff > 0
+//printf("pos: "); print_row(&row);
             pos_rows[nbr_pos++] = row;
         } else { //coeff < 0
+//printf("neg: "); print_row(&row);
             neg_rows[nbr_neg++] = row;
         }
     }    
@@ -305,6 +337,8 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
 }
 
 fm_poly* copy_poly(fm_poly* poly){
+	if(poly == NULL)
+		return NULL;
 	fm_poly *tmp = malloc(sizeof(fm_poly));
 	fm_poly_entry *tmp_entries = malloc(sizeof(fm_poly_entry)*poly->poly_len);
 	tmp->poly_len = poly->poly_len;
@@ -319,64 +353,96 @@ fm_poly* copy_poly(fm_poly* poly){
 int elim_2(fm_system* system){
     
     unsigned int i, j;
+	fm_poly *b1 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
+	fm_poly *b2 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
+	unsigned int n_b1 = 0;
+	unsigned int n_b2 = 0;
+	unsigned int n_neg = 0;
 
 	while(system->curr_nbr_x > 0){
 
-printf("system:\n");print_system(system);
+printf("system:\n");print_system(system);printf("printed system\n");
 
 		//Sort
 		unsigned int* ns = sort_by_coeffs(system);
 		unsigned int n_pos = ns[0];
-		unsigned int n_neg = ns[1];
+		n_neg = ns[1];
 		unsigned int n_zero = ns[2];
 		unsigned int n_non_zero = n_pos + n_neg;
+
 		
 		fm_poly *tmp_poly;
 		fm_poly_entry tmp_poly_entry;
 		
 		//Divide
+		printf("\nDivide:\n");
+printf("npos = %d, nneg = %d\n", n_pos, n_neg);
 		for(i = 0; i < n_pos + n_neg; ++i){
 		    tmp_poly = system->rows[i].lesser;
-		    tmp_poly_entry = tmp_poly->poly[tmp_poly->poly_len - 1];
+		    tmp_poly_entry = tmp_poly->poly[system->curr_nbr_x - 1];
+printf("\ttmp_poly_entry = (%lld/%lld)x_{%llu}\n", tmp_poly_entry.numerator, tmp_poly_entry.denominator, tmp_poly_entry.index);
 		    
 		    for(j = 0; j < tmp_poly->poly_len; ++j){
 		        tmp_poly->poly[j].numerator = tmp_poly->poly[j].numerator * tmp_poly_entry.denominator;
 		        tmp_poly->poly[j].denominator = tmp_poly->poly[j].denominator * tmp_poly_entry.numerator;
+
+				if(tmp_poly->poly[j].numerator == tmp_poly->poly[j].denominator){
+					tmp_poly->poly[j].numerator = 1;
+					tmp_poly->poly[j].denominator = 1;
+				}
+		    }
+
+			tmp_poly = system->rows[i].greater;
+		    
+		    for(j = 0; j < tmp_poly->poly_len; ++j){
+		        tmp_poly->poly[j].numerator = tmp_poly->poly[j].numerator * tmp_poly_entry.denominator;
+		        tmp_poly->poly[j].denominator = tmp_poly->poly[j].denominator * tmp_poly_entry.numerator;
+
+				if(tmp_poly->poly[j].numerator == tmp_poly->poly[j].denominator){
+					tmp_poly->poly[j].numerator = 1;
+					tmp_poly->poly[j].denominator = 1;
+				}
 		    }
 		    
-		    system->rows[i].greater->poly[0].numerator = system->rows[i].greater->poly[0].numerator * tmp_poly_entry.denominator;
-		    system->rows[i].greater->poly[0].denominator = system->rows[i].greater->poly[0].denominator * tmp_poly_entry.numerator;
+		    //system->rows[i].greater->poly[0].numerator = system->rows[i].greater->poly[0].numerator * tmp_poly_entry.denominator;
+		    //system->rows[i].greater->poly[0].denominator = system->rows[i].greater->poly[0].denominator * tmp_poly_entry.numerator;
 		    
 		    if((tmp_poly_entry.numerator < 0 && tmp_poly_entry.denominator > 0) || (tmp_poly_entry.numerator > 0 && tmp_poly_entry.denominator < 0)){
-		        system->rows[i].lesser = system->rows[i].greater;
-		        system->rows[i].greater = tmp_poly;
+		        system->rows[i].greater = system->rows[i].lesser;
+		        system->rows[i].lesser = tmp_poly;
 		    }
 		}
-		printf("\nDivide:\n");print_system(system);
+		print_system(system);
 		
 		//Isolate
 		fm_row *new_rows = (fm_row*) malloc(sizeof(fm_row)*n_non_zero);
-		fm_poly *new_poly = (fm_poly*) malloc(sizeof(fm_poly)*n_non_zero);
-		fm_poly_entry *new_entries = (fm_poly_entry*) malloc(sizeof(fm_poly_entry)*system->nbr_rows*system->curr_nbr_x);
+		fm_poly *new_poly = (fm_poly*) malloc(sizeof(fm_poly)*n_non_zero); //TODO: Maybe add individual allocations for consistency
+		fm_poly_entry *new_entries = (fm_poly_entry*) malloc(sizeof(fm_poly_entry)*system->nbr_rows*(system->nbr_x + 1));
 		fm_poly *curr_poly;
 		printf("\nIsolate:\n");
 		for(i = 0; i < n_non_zero; ++i){
 		
 		    curr_poly = &(new_poly[i]);
-		    curr_poly->poly_len = system->curr_nbr_x;
+		    curr_poly->poly_len = system->nbr_x + 1;
 		    curr_poly->poly = &(new_entries[i*curr_poly->poly_len]);
 		    
-		    if(system->rows[i].lesser->poly_len == 1 && system->rows[i].lesser->poly[0].index == 0){ //if lesser == const side
+		    if(is_const(system->rows[i].lesser)){ //if lesser == const side
 		       
 		        for(j=0; j < system->curr_nbr_x-1; ++j){
 		            curr_poly->poly[j].numerator = -system->rows[i].greater->poly[j].numerator;
 		            curr_poly->poly[j].denominator = system->rows[i].greater->poly[j].denominator;
 		            curr_poly->poly[j].index = system->rows[i].greater->poly[j].index;
 		        }
-		        curr_poly->poly[j].numerator = system->rows[i].lesser->poly[0].numerator;
-		        curr_poly->poly[j].denominator = system->rows[i].lesser->poly[0].denominator;
-		        curr_poly->poly[j].index = system->rows[i].lesser->poly[0].index;
-		        
+				for(; j < system->nbr_x; ++j){
+		            curr_poly->poly[j].numerator = 0;
+		            curr_poly->poly[j].denominator = 1;
+		            curr_poly->poly[j].index = j+1;
+				}
+//printf("const? ");print_poly((system->rows[i].lesser));printf("\n");
+		        curr_poly->poly[j].numerator = system->rows[i].lesser->poly[system->rows[i].lesser->poly_len - 1].numerator;
+		        curr_poly->poly[j].denominator = system->rows[i].lesser->poly[system->rows[i].lesser->poly_len - 1].denominator;
+		        curr_poly->poly[j].index = system->rows[i].lesser->poly[system->rows[i].lesser->poly_len - 1].index;
+//print_poly(curr_poly); printf("\tpoly_len = %u\n", curr_poly->poly_len);
 		        new_rows[i].greater = NULL;
 		        new_rows[i].lesser = curr_poly;
 		        
@@ -387,10 +453,16 @@ printf("system:\n");print_system(system);
 		            curr_poly->poly[j].denominator = system->rows[i].lesser->poly[j].denominator;
 		            curr_poly->poly[j].index = system->rows[i].lesser->poly[j].index;
 		        }
-		        curr_poly->poly[j].numerator = system->rows[i].greater->poly[0].numerator;
-		        curr_poly->poly[j].denominator = system->rows[i].greater->poly[0].denominator;
-		        curr_poly->poly[j].index = system->rows[i].greater->poly[0].index;
-		        
+				for(; j < system->nbr_x; ++j){
+		            curr_poly->poly[j].numerator = 0;
+		            curr_poly->poly[j].denominator = 1;
+		            curr_poly->poly[j].index = j+1;
+				}
+//printf("const? ");print_poly((system->rows[i].greater));printf("\n");
+		        curr_poly->poly[j].numerator = system->rows[i].greater->poly[system->rows[i].greater->poly_len - 1].numerator;
+		        curr_poly->poly[j].denominator = system->rows[i].greater->poly[system->rows[i].greater->poly_len - 1].denominator;
+		        curr_poly->poly[j].index = system->rows[i].greater->poly[system->rows[i].greater->poly_len - 1].index;
+//print_poly(curr_poly); printf("\tpoly_len = %u\n", curr_poly->poly_len);
 		        new_rows[i].lesser = NULL;
 		        new_rows[i].greater = curr_poly;
 		    }
@@ -398,10 +470,10 @@ printf("system:\n");print_system(system);
 		}
 		
 		//B's
-		fm_poly *b1 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
-		fm_poly *b2 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
-		unsigned int n_b1 = 0;
-		unsigned int n_b2 = 0;
+		b1 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
+		b2 = (fm_poly*) malloc(sizeof(fm_poly)*(system->nbr_rows));
+		n_b1 = 0;
+		n_b2 = 0;
 		for(i = 0; i < n_non_zero; ++i){
 		    if(new_rows[i].lesser == NULL){
 		        b2[n_b2++] = *(new_rows[i].greater);
@@ -409,6 +481,32 @@ printf("system:\n");print_system(system);
 		        b1[n_b1++] = *(new_rows[i].lesser);
 		    }
 		}
+
+		if(n_b1 == 0){
+			n_b1 = 1;
+			b1 = NULL;
+/*			fm_poly_entry* b1_poly_entry = malloc(sizeof(fm_poly_entry));
+			b1_poly_entry->index = 0;
+			b1_poly_entry->numerator = -(ULONG_MAX-1);
+			b1_poly_entry->denominator = 1;
+			b1[0].poly = b1_poly_entry;
+			b1[0].poly_len = 1;
+*/		}
+		if(n_b2 == 0){
+			n_b2 = 1;
+			b2 = NULL;
+/*			fm_poly_entry* b2_poly_entry = malloc(sizeof(fm_poly_entry));
+			b2_poly_entry->index = 0;
+			b2_poly_entry->numerator = ULONG_MAX;
+			b2_poly_entry->denominator = 1;
+			b2[0].poly = b2_poly_entry;
+			b2[0].poly_len = 1;
+*/		}
+
+		if(system->curr_nbr_x == 1){
+			break; //This is the last iteration, further steps arent needed.
+		}
+
 		printf("\nCreate b1:\n");
 		for(i = 0; i<n_b1;++i) {print_poly(&(b1[i])); printf("\n");}
 		printf("Create b2:\n");
@@ -417,13 +515,16 @@ printf("system:\n");print_system(system);
 		
 		//Merge b's
 		printf("\nMerge b*:\n");
+		int count = 0;
 		fm_row *b_rows = (fm_row*) malloc(sizeof(fm_row)*(n_b1*n_b2+n_zero));
 		for(i = 0; i < n_b1; ++i){
 		    for(j = 0; j < n_b2; ++j){
-		        b_rows[i*n_b1+j].lesser = copy_poly(&(b1[i]));
-		        b_rows[i*n_b1+j].greater = copy_poly(&(b2[j]));
+		        b_rows[count].lesser = copy_poly(&(b1[i]));
+		        b_rows[count].greater = copy_poly(&(b2[j]));
+				count++;
 		    }
 		}
+
 	//	free(b1); TODO:
 	//	free(b2); TODO:
 		for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
@@ -432,6 +533,10 @@ printf("system:\n");print_system(system);
 		printf("\nSimplify:\n");
 		fm_poly_entry *great_e, *less_e;
 		for(i = 0; i < n_b1*n_b2; ++i){
+			// If either side is 'infinity' ie NULL.
+			if(b_rows[i].greater == NULL || b_rows[i].lesser == NULL)
+				continue;
+
 			//Move non-constants to lesser side
 			for(j = 0; j < b_rows[i].greater->poly_len-1; ++j){
 				great_e = &(b_rows[i].greater->poly[j]);
@@ -458,19 +563,68 @@ printf("system:\n");print_system(system);
 		printf("\nAdd zero-coeff rows:\n");
 		i = n_b1*n_b2;
 		for(j = n_pos + n_neg; j < system->nbr_rows; ++j){
-		    b_rows[i] = system->rows[j];
-		    b_rows[i].lesser->poly_len = system->curr_nbr_x-1;
+		    b_rows[i].lesser = copy_poly(system->rows[j].lesser);
+			b_rows[i].greater = copy_poly(system->rows[j].greater);
 			++i;
 		}
 		for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));
-		
+		printf("b_rows size: %u\n", n_b1*n_b2+n_zero);
 		printf("elim_2 done\n");
 		system->curr_nbr_x = system->curr_nbr_x - 1;
 printf("curr nbr x = %d\n", system->curr_nbr_x);
 		//COPY ALL NON-ZERO COEFF ENTRIES FROM TO SYSTEM FROM b_row
+//		free(system->rows); //TODO:
+		system->rows = b_rows;
+		
+		system->nbr_rows = n_b1*n_b2+n_zero;
+		
 	}
-    return 7;
-    
+
+	//max b1, min b2
+	fm_poly_entry *tmp;
+	double max=DBL_MIN, min=DBL_MAX, cmp;
+	for(i = 0; i < n_b1 && b1!=NULL; i++){
+		tmp = &b1[i].poly[b1[i].poly_len - 1];
+		if(tmp->index != 0){
+			printf("Error: Kill all humans1010001b1000\n");
+		}
+		cmp = tmp->numerator / tmp->denominator;
+		if(cmp > max)
+			max = cmp;
+	}
+	for(i = 0; i < n_b2 && b2!=NULL; i++){
+		tmp = &b2[i].poly[b2[i].poly_len - 1];
+		if(tmp->index != 0){
+			printf("Error: Kill all humans1010001b2000\n");
+		}
+		cmp = tmp->numerator / tmp->denominator;
+		if(cmp < min)
+			min = cmp;
+	}
+	//TODO::::
+	//free(b1);
+	//free(b2);
+	printf("\n------------------\nAlgorithm complete\n------------------\n");print_system(system);
+	/*if(min >= max)
+		return EXIT_FAILURE;
+	return EXIT_SUCCESS;*/
+
+    if(max > min){
+		return EXIT_FAILURE;
+	}
+
+	for(j = n_neg; j < system->nbr_rows; ++j){
+		if(is_const(system->rows[i].lesser)){
+			if(system->rows[i].lesser->poly[system->rows[i].lesser->poly_len - 1].numerator < 0){
+				return EXIT_FAILURE;
+			}
+		}else{
+			if(system->rows[i].greater->poly[system->rows[i].greater->poly_len - 1].numerator < 0){
+				return EXIT_FAILURE;
+			}
+		}
+	}
+	return EXIT_SUCCESS;
 }
 
 int f_m_elim(fm_system* system){
