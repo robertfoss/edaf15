@@ -582,8 +582,10 @@ printf("curr nbr x = %d\n", system->curr_nbr_x);
 
 	//max b1, min b2
 	fm_poly_entry *tmp;
-	double max=DBL_MIN, min=DBL_MAX, cmp;
+	double max=(-DBL_MAX), min=DBL_MAX, cmp;
+	printf("max: %f  min: %f\n", max, min);
 	for(i = 0; i < n_b1 && b1!=NULL; i++){
+		
 		tmp = &b1[i].poly[b1[i].poly_len - 1];
 		if(tmp->index != 0){
 			printf("Error: Kill all humans1010001b1000\n");
