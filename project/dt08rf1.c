@@ -590,7 +590,7 @@ printf("curr nbr x = %d\n", system->curr_nbr_x);
 		if(tmp->index != 0){
 			printf("Error: Kill all humans1010001b1000\n");
 		}
-		cmp = tmp->numerator / tmp->denominator;
+		cmp = (double)tmp->numerator / (double)tmp->denominator;
 		if(cmp > max)
 			max = cmp;
 	}
@@ -599,7 +599,7 @@ printf("curr nbr x = %d\n", system->curr_nbr_x);
 		if(tmp->index != 0){
 			printf("Error: Kill all humans1010001b2000\n");
 		}
-		cmp = tmp->numerator / tmp->denominator;
+		cmp = (double)tmp->numerator / (double)tmp->denominator;
 		if(cmp < min)
 			min = cmp;
 	}
@@ -610,7 +610,7 @@ printf("curr nbr x = %d\n", system->curr_nbr_x);
 	/*if(min >= max)
 		return EXIT_FAILURE;
 	return EXIT_SUCCESS;*/
-
+	printf("\n-----------\nMax bound: %f\nMin bound: %f\n------------\n", max, min);
     if(max > min){
 		return EXIT_FAILURE;
 	}
