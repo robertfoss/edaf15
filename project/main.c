@@ -48,6 +48,7 @@ static struct fm {
 };
 
 static unsigned int correct[] = { 1, 0, 1, 0, 0, 0 };
+static unsigned int results[6];
 
 static int compare_count(const void* ap, const void* bp)
 {
@@ -93,6 +94,7 @@ int main(int argc, char** argv)
 			snprintf(c, sizeof c, "input/%zu/c", j);
 
 			result = (*fm[i].func)(a, c, 0);
+			results[j] = result;
 
 			if (result == correct[j])
 				pass += 1;
@@ -105,11 +107,14 @@ int main(int argc, char** argv)
 			}
 		}
 
-		if (pass < ntest)
+		if (pass < ntest){
 			printf("\"%s\" FAILED %zu/%zu TESTS.\n", fm[i].name,
 				ntest - pass, ntest);
+			printf("Correct\tResult\n");
+			for(j = 0; j < ntest; j++)
+				printf("%d\t%d\n",correct[j],results[j]);
 
-		else {
+		} else {
 			printf("\"%s\" PASSED ALL %zu TESTS.\n", 
 				fm[i].name, ntest);
 
