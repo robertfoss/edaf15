@@ -279,7 +279,6 @@ static void print_system(fm_system* system){
 }
 
 
-// TODO: Also free resources
 static void done(int unused){
 	proceed = false;
 	unused += 3;
@@ -666,13 +665,14 @@ printf("system:\n");print_system(system);printf("printed system\n");
 			max = cmp;
 	}
 
-	//free(b1);
-	//free(b2);
 
-	printf("\n------------------\nAlgorithm complete\n------------------\n");print_system(system);
+	printf("\n------------------\nAlgorithm complete\n------------------\n");
+	print_system(system);
+
 	/*if(min >= max)
 		return EXIT_FAILURE;
 	return EXIT_SUCCESS;*/
+
 	printf("\n-----------\nMax bound: %f\nMin bound: %f\nResult: ", max, min);
     if(min > max){
 		xfree();
