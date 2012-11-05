@@ -458,7 +458,7 @@ printf("system:\n");print_system(system);printf("printed system\n");
 			if(tmp_poly_entry.numerator == 0){
 				continue;
 			}
-printf("\ttmp_poly_entry = (%lld/%lld)x_{%llu}\n", tmp_poly_entry.numerator, tmp_poly_entry.denominator, tmp_poly_entry.index);
+//printf("\ttmp_poly_entry = (%lld/%lld)x_{%llu}\n", tmp_poly_entry.numerator, tmp_poly_entry.denominator, tmp_poly_entry.index);
 		    
 		    for(j = 0; j < tmp_poly->poly_len; ++j){
 		        tmp_poly->poly[j].numerator = tmp_poly->poly[j].numerator * tmp_poly_entry.denominator;
@@ -556,18 +556,13 @@ printf("\ttmp_poly_entry = (%lld/%lld)x_{%llu}\n", tmp_poly_entry.numerator, tmp
 		        b1[n_b1++] = *copy_poly(new_rows[i].lesser);
 		    }
 		}
-		//free(new_rows);
-		//free(new_poly);
-		//free(new_entries);
 
 		if(n_b1 == 0){
 			n_b1 = 1;
-			//free(b1);
 			b1 = NULL;
 		}
 		if(n_b2 == 0){
 			n_b2 = 1;
-			//free(b2);
 			b2 = NULL;
 		}
 
@@ -595,18 +590,6 @@ printf("\ttmp_poly_entry = (%lld/%lld)x_{%llu}\n", tmp_poly_entry.numerator, tmp
 		    }
 		}
 		for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
-
-/*		for(i = 0; i < n_b1; ++i){
-			if(b1 != NULL)
-				free(b1[i].poly);
-		}
-		for(i = 0; i < n_b2; ++i){
-			if(b2 != NULL)
-				free(b2[i].poly);
-		}
-*/
-		//free(b1); // Ok due to the break above
-		//free(b2); // Ok due to the break above
 
 
 		//Simplify
@@ -651,7 +634,6 @@ printf("\ttmp_poly_entry = (%lld/%lld)x_{%llu}\n", tmp_poly_entry.numerator, tmp
 		printf("b_rows size: %u\n", n_b1*n_b2+n_zero);
 		printf("elim_2 done\n");
 		system->curr_nbr_x = system->curr_nbr_x - 1;
-printf("curr nbr x = %d\n", system->curr_nbr_x);
 		//COPY ALL NON-ZERO COEFF ENTRIES FROM TO SYSTEM FROM b_row
 
 		system->rows = b_rows;
@@ -669,7 +651,7 @@ printf("curr nbr x = %d\n", system->curr_nbr_x);
 			printf("Error: Kill all humans1010001b1000\n");
 		}
 		cmp = (double)tmp->numerator / (double)tmp->denominator;
-printf("b1 cmp = %f\n", cmp);
+//printf("b1 cmp = %f\n", cmp);
 		if(cmp < min)
 			min = cmp;
 	}
@@ -679,7 +661,7 @@ printf("b1 cmp = %f\n", cmp);
 			printf("Error: Kill all humans1010001b2000\n");
 		}
 		cmp = (double)tmp->numerator / (double)tmp->denominator;
-printf("b2 cmp = %f\n", cmp);
+//printf("b2 cmp = %f\n", cmp);
 		if(cmp > max)
 			max = cmp;
 	}
