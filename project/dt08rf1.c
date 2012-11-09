@@ -13,6 +13,8 @@ if((unsigned int)accessed_element >= (unsigned int)allocated_elements){\
 }\
 };
 
+#define DEBUG if(0)
+
 
 static unsigned long long	fm_count;
 static volatile bool			proceed = false;
@@ -183,9 +185,9 @@ static fm_system* parse_files(FILE *afile, FILE *cfile)
 	unsigned int ctr_row = 0;
 
 	for (line_tok = strtok_r(buffer+4*sizeof(char), "\n", &line_save); line_tok; line_tok = strtok_r(NULL, "\n", &line_save)) {
-printf("line=%s\n", line_tok);
+DEBUG printf("line=%s\n", line_tok);
 		for (integer_tok = strtok_r(line_tok, " \t", &integer_save); integer_tok; integer_tok = strtok_r(NULL, " \t", &integer_save)) {
-printf("integer=%s\n", integer_tok);
+DEBUG printf("integer=%s\n", integer_tok);
 				sscanf(integer_tok, "%lld", &read_integer);
 
 				fm_rows[ctr_row].lesser->poly[ctr_col].numerator = read_integer;
@@ -209,7 +211,7 @@ printf("integer=%s\n", integer_tok);
 	ctr_row = 0;
 
 	for (line_tok = strtok_r(buffer+2*sizeof(char), " \t\n", &line_save); line_tok; line_tok = strtok_r(NULL, "\n", &line_save)) {
-		printf("line=%s\n", line_tok);
+		DEBUG printf("line=%s\n", line_tok);
 		sscanf(line_tok, "%lld", &read_integer);
 
 		fm_rows[ctr_row].greater->poly[0].numerator = read_integer;
@@ -225,7 +227,6 @@ printf("integer=%s\n", integer_tok);
 }
 
 static void print_poly(fm_poly* poly){
-
     unsigned int j;
 
 	fm_poly_entry *poly_entry;
@@ -329,7 +330,9 @@ static unsigned int* sort_by_coeffs(fm_system* system){ //sort system->rows by c
 			continue;
 
         }
-printf("sort poly (%u): ", nbr_x);print_poly(poly);printf("\n");
+DEBUG printf("sort poly (%u): ", nbr_x);
+DEBUG print_poly(poly);
+DEBUG printf("\n");
 		
         sort_entry = poly->poly[nbr_x-1]; //largest x-index term in row
 		if(sort_entry.index != (nbr_x)){
@@ -339,14 +342,12 @@ printf("sort poly (%u): ", nbr_x);print_poly(poly);printf("\n");
 				}
 			}
 		}
-printf("sort_entry = (%lld/%lld)x_%llu\n", sort_entry.numerator, sort_entry.denominator, sort_entry.index);
+DEBUG printf("sort_entry = (%lld/%lld)x_%llu\n", sort_entry.numerator, sort_entry.denominator, sort_entry.index);
 
 
-//printf("\tsort_entry = (%lld/%lld)x_{%llu}\n", sort_entry.numerator, sort_entry.denominator, sort_entry.index);
         
         if(sort_entry.index != nbr_x || sort_entry.numerator == 0){ //coeff == 0
             zero_rows[nbr_zero++] = row;
-//printf("zero: "); print_row(&row);
             continue;
         }
         
@@ -354,10 +355,8 @@ printf("sort_entry = (%lld/%lld)x_%llu\n", sort_entry.numerator, sort_entry.deno
         denominator = sort_entry. denominator;
         
         if((numerator > 0 && denominator > 0) || (numerator < 0 && denominator < 0)){ // coeff > 0
-//printf("pos: "); print_row(&row);
             pos_rows[nbr_pos++] = row;
         } else { //coeff < 0
-//printf("neg: "); print_row(&row);
             neg_rows[nbr_neg++] = row;
         }
     }    
@@ -370,12 +369,9 @@ printf("sort_entry = (%lld/%lld)x_%llu\n", sort_entry.numerator, sort_entry.deno
     for(; i < nbr_rows; ++i){
         system->rows[i] = zero_rows[i - (nbr_pos + nbr_neg)];
     }
-    /*free(pos_rows);
-    free(neg_rows);
-    free(zero_rows);*/
     
-    printf("sorted on x_{%d}?\n", nbr_x);
-    print_system(system);
+    DEBUG printf("sorted on x_{%d}?\n", nbr_x);
+    DEBUG print_system(system);
     unsigned int *ret = malloc(sizeof(unsigned int)*3);
     ret[0] = nbr_pos;
     ret[1] = nbr_neg;
@@ -392,8 +388,6 @@ fm_poly* copy_poly(fm_poly* poly){
 	tmp->poly = tmp_entries;
 
 	memcpy(tmp_entries, poly->poly, sizeof(fm_poly_entry)*poly->poly_len);
-//printf("orig poly: "); print_poly(poly);
-//printf("copy poly: "); print_poly(tmp);
 	return tmp;
 }
 
@@ -425,7 +419,10 @@ int elim_2(fm_system* system){
 
 	while(system->curr_nbr_x > 0){
 
-printf("system:\n");print_system(system);printf("printed system\n");
+DEBUG printf("system:\n");
+DEBUG print_system(system);
+DEBUG printf("printed system\n");
+
 
 		//Sort
 		unsigned int* ns = sort_by_coeffs(system);
@@ -438,19 +435,9 @@ printf("system:\n");print_system(system);printf("printed system\n");
 		
 		fm_poly *tmp_poly;
 		fm_poly_entry tmp_poly_entry;
-
-/*		if(iter_done(system)){
-			printf("Iteration done!! Skipping..\n");
-			b1 = NULL;
-			b2 = NULL;
-			n_b1 = 1;
-			n_b2 = 1;
-			break;
-		}*/
-
 		
 		//Divide
-		printf("\nDivide:\n");
+		DEBUG printf("\nDivide:\n");
 		for(i = 0; i < n_pos + n_neg; ++i){
 		    tmp_poly = system->rows[i].lesser;
 		    tmp_poly_entry = tmp_poly->poly[system->curr_nbr_x - 1];
@@ -486,14 +473,14 @@ printf("system:\n");print_system(system);printf("printed system\n");
 		        system->rows[i].lesser = tmp_poly;
 		    }
 		}
-		print_system(system);
+		DEBUG print_system(system);
 		
 		//Isolate
 		fm_row *new_rows = (fm_row*) xmalloc(n_non_zero, sizeof(fm_row));
 		fm_poly *new_poly = (fm_poly*) xmalloc(n_non_zero, sizeof(fm_poly)); //TODO: Maybe add individual allocations for consistency
 		fm_poly_entry *new_entries = (fm_poly_entry*) xmalloc(system->nbr_rows*(system->nbr_x + 1), sizeof(fm_poly_entry));
 		fm_poly *curr_poly;
-		printf("\nIsolate:\n");
+		DEBUG printf("\nIsolate:\n");
 		for(i = 0; i < n_non_zero; ++i){
 		
 		    curr_poly = &(new_poly[i]);
@@ -512,11 +499,9 @@ printf("system:\n");print_system(system);printf("printed system\n");
 		            curr_poly->poly[j].denominator = 1;
 		            curr_poly->poly[j].index = j+1;
 				}
-//printf("const? ");print_poly((system->rows[i].lesser));printf("\n");
 		        curr_poly->poly[j].numerator = system->rows[i].lesser->poly[system->rows[i].lesser->poly_len - 1].numerator;
 		        curr_poly->poly[j].denominator = system->rows[i].lesser->poly[system->rows[i].lesser->poly_len - 1].denominator;
 		        curr_poly->poly[j].index = system->rows[i].lesser->poly[system->rows[i].lesser->poly_len - 1].index;
-//print_poly(curr_poly); printf("\tpoly_len = %u\n", curr_poly->poly_len);
 		        new_rows[i].greater = NULL;
 		        new_rows[i].lesser = curr_poly;
 		        
@@ -532,15 +517,13 @@ printf("system:\n");print_system(system);printf("printed system\n");
 		            curr_poly->poly[j].denominator = 1;
 		            curr_poly->poly[j].index = j+1;
 				}
-//printf("const? ");print_poly((system->rows[i].greater));printf("\n");
 		        curr_poly->poly[j].numerator = system->rows[i].greater->poly[system->rows[i].greater->poly_len - 1].numerator;
 		        curr_poly->poly[j].denominator = system->rows[i].greater->poly[system->rows[i].greater->poly_len - 1].denominator;
 		        curr_poly->poly[j].index = system->rows[i].greater->poly[system->rows[i].greater->poly_len - 1].index;
-//print_poly(curr_poly); printf("\tpoly_len = %u\n", curr_poly->poly_len);
 		        new_rows[i].lesser = NULL;
 		        new_rows[i].greater = curr_poly;
 		    }
-		    print_row(&(new_rows[i]));
+		    DEBUG print_row(&(new_rows[i]));
 		}
 		
 		//B's
@@ -556,11 +539,11 @@ printf("system:\n");print_system(system);printf("printed system\n");
 		    }
 		}
 
-		if(n_b1 == 0){
+		if(n_neg <= 0){
 			n_b1 = 1;
 			b1 = NULL;
 		}
-		if(n_b2 == 0){
+		if(n_pos <= 0){
 			n_b2 = 1;
 			b2 = NULL;
 		}
@@ -571,14 +554,14 @@ printf("system:\n");print_system(system);printf("printed system\n");
 
 		
 
-		printf("\nCreate b1:\n");
-		for(i = 0; i<n_b1;++i) {print_poly(&(b1[i])); printf("\n");}
-		printf("Create b2:\n");
-		for(i = 0; i<n_b2;++i) {print_poly(&(b2[i])); printf("\n");}
-		printf("#b1: %u\t #b2: %u\n", n_b1, n_b2);
+		DEBUG printf("\nCreate b1:\n");
+		DEBUG for(i = 0; i<n_b1;++i) {print_poly(&(b1[i])); printf("\n");}
+		DEBUG printf("Create b2:\n");
+		DEBUG for(i = 0; i<n_b2;++i) {print_poly(&(b2[i])); printf("\n");}
+		DEBUG printf("#b1: %u\t #b2: %u\n", n_b1, n_b2);
 		
 		//Merge b's
-		printf("\nMerge b*:\n");
+		DEBUG printf("\nMerge b*:\n");
 		int count = 0;
 		fm_row *b_rows = (fm_row*) xmalloc(n_b1*n_b2+n_zero+1, sizeof(fm_row));
 		for(i = 0; i < n_b1; ++i){
@@ -588,11 +571,11 @@ printf("system:\n");print_system(system);printf("printed system\n");
 				count++;
 		    }
 		}
-		for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
+		DEBUG for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
 
 
 		//Simplify
-		printf("\nSimplify:\n");
+		DEBUG printf("\nSimplify:\n");
 		fm_poly_entry *great_e, *less_e;
 		for(i = 0; i < n_b1*n_b2; ++i){
 			// If either side is 'infinity' ie NULL.
@@ -618,20 +601,20 @@ printf("system:\n");print_system(system);printf("printed system\n");
 			less_e->numerator = 0;
 			less_e->denominator = 1;
 		}
-		for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
+		DEBUG for(i = 0; i < n_b1*n_b2; ++i) print_row(&(b_rows[i]));
 	 
 
 		//Add rows with 0 coeff
-		printf("\nAdd zero-coeff rows:\n");
+		DEBUG printf("\nAdd zero-coeff rows:\n");
 		i = n_b1*n_b2;
 		for(j = n_pos + n_neg; j < system->nbr_rows; ++j){
 		    b_rows[i].lesser = copy_poly(system->rows[j].lesser);
 			b_rows[i].greater = copy_poly(system->rows[j].greater);
 			++i;
 		}
-		for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));
-		printf("b_rows size: %u\n", n_b1*n_b2+n_zero);
-		printf("elim_2 done\n");
+		DEBUG for(i = 0; i < n_b1*n_b2+n_zero; ++i) print_row(&(b_rows[i]));
+		DEBUG printf("b_rows size: %u\n", n_b1*n_b2+n_zero);
+		DEBUG printf("elim_2 done\n");
 		system->curr_nbr_x = system->curr_nbr_x - 1;
 		//COPY ALL NON-ZERO COEFF ENTRIES FROM TO SYSTEM FROM b_row
 
@@ -666,17 +649,21 @@ printf("system:\n");print_system(system);printf("printed system\n");
 	}
 
 
-	printf("\n------------------\nAlgorithm complete\n------------------\n");
-	print_system(system);
 
-	/*if(min >= max)
-		return EXIT_FAILURE;
-	return EXIT_SUCCESS;*/
+	DEBUG printf("\n------------------\nAlgorithm complete\n------------------\n");
+	DEBUG print_system(system);
+//printf("n_neg=%u  n_pos=%u  n_zero=%u n=%u\n",n_neg,n_pos,n_zero,system->nbr_rows);
+	if((n_pos == 0 && n_zero == 0) || (n_neg == 0 && n_zero == 0)){
+		xfree();
+		DEBUG printf("1 only positive/negative coeffsx\n------------\n");
+		return 1; // Success
+	}
 
-	printf("\n-----------\nMax bound: %f\nMin bound: %f\nResult: ", max, min);
+	DEBUG printf("\n-----------\nMax bound: %f\nMin bound: %f\nResult: ", max, min);
+
     if(min > max){
 		xfree();
-		printf("0 min>max\n------------\n");
+		DEBUG printf("0 min>max\n------------\n");
 		return 0; // Fail
 	}
 
@@ -684,19 +671,19 @@ printf("system:\n");print_system(system);printf("printed system\n");
 		if(is_const(system->rows[i].lesser)){
 			if(system->rows[i].lesser->poly[system->rows[i].lesser->poly_len - 1].numerator < 0){
 				xfree();
-				printf("0 if\n------------\n");
+				DEBUG printf("0 if\n------------\n");
 				return 0; // Fail
 			}
 		}else{
 			if(system->rows[i].greater->poly[system->rows[i].greater->poly_len - 1].numerator < 0){
 				xfree();
-				printf("0 else\n------------\n");
+				DEBUG printf("0 else\n------------\n");
 				return 0; // Fail
 			}
 		}
 	}
 	xfree();
-	printf("1\n------------\n");
+	DEBUG printf("1\n------------\n");
 	return 1; // Success
 }
 
@@ -720,7 +707,7 @@ dt08rf1(char* aname, char* cname, int seconds)
 	}
 
 	fm_system* system = parse_files(afile, cfile);
-	print_system(system);
+	DEBUG print_system(system);
 
     //TODO: move
     return elim_2(system);
