@@ -104,13 +104,6 @@ long fsize(FILE *fp) {
 }
 
 
-static void
-fm_elim(fm_row *rows, unsigned int nbr_rows)
-{
-	return;
-}
-
-
 static unsigned int
 count_rows(FILE *fp)
 {
@@ -417,7 +410,7 @@ int elim_2(fm_system* system){
 	unsigned int n_b2 = 0;
 	unsigned int n_neg = 0, n_pos = 0, n_zero = 0, n_non_zero = 0;
 
-	while(system->curr_nbr_x > 0){
+	while(system->curr_nbr_x > 0 && proceed == 0){
 
 DEBUG printf("system:\n");
 DEBUG print_system(system);
@@ -710,16 +703,11 @@ dt08rf1(char* aname, char* cname, int seconds)
 	DEBUG print_system(system);
 
     //TODO: move
-    return elim_2(system);
+    //return elim_2(system);
 
 	if (seconds == 0) {
 		/* Just run once for validation. */
-			
-		// Uncomment when your function and variables exist...
-		// return fm_elim(rows, cols, a, c);
-
-		fm_elim(NULL, 0);
-		return 1; // return one, i.e. has a solution for now...
+		return elim_2(system);
 	}
 
 	/* Tell operating system to call function DONE when an ALARM comes. */
@@ -729,10 +717,8 @@ dt08rf1(char* aname, char* cname, int seconds)
 	/* Now loop until the alarm comes... */
 	proceed = true;
 	while (proceed) {
-		// Uncomment when your function and variables exist...
-		// fm_elim(rows, cols, a, c);
-
-		fm_elim(NULL, 0);
+		fm_system* system = parse_files(afile, cfile);
+		elim_2(system);
 
 		fm_count++;
 	}
